@@ -1,0 +1,4 @@
+before NPM Start please run this code in terminal:
+export NODE_OPTIONS=--openssl-legacy-provider
+
+
