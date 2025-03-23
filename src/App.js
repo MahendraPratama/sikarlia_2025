@@ -27,6 +27,7 @@ function App() {
     <div className="App">
       <Switch>
         <Route path="/sign-up" exact component={SignUp} />
+        <Route path="/" exact component={SignIn} />
         <Route path="/sign-in" exact component={SignIn} />
         <Main>
           <Route exact path="/dashboard" component={Home} />
@@ -34,7 +35,7 @@ function App() {
           <Route exact path="/billing" component={Billing} />
           <Route exact path="/rtl" component={Rtl} />
           <Route exact path="/profile" component={Profile} />
-          {/* <Redirect from="*" to="/sign-in" /> */}
+          {/* <Redirect from="/" to="/sign-in" /> */}
         </Main>
       </Switch>
     </div>

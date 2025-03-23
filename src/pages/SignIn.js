@@ -21,8 +21,10 @@ import {
   Form,
   Input,
   Switch,
+  Alert,
+  Progress,
 } from "antd";
-import signinbg from "../assets/images/background/robot-icon.png";
+import signinbg from "../assets/images/background/robot-maskot-bg.png";
 import LogoLogin from "../assets/images/logo/logo_baru_tengah.png";
 import {
   DribbbleOutlined,
@@ -31,16 +33,22 @@ import {
   GithubOutlined,
 } from "@ant-design/icons";
 import md5 from 'md5';
+import { setSession } from "../utils/general-func";
+
 function onChange(checked) {
   console.log(`switch to ${checked}`);
 }
 const { Title } = Typography;
 const { Header, Footer, Content } = Layout;
 export default class SignIn extends Component {
+  constructor(props){
+    super(props)
+    this.state={
+      togleAlert:false,
+    }
+  }
   render() {
     const onFinish = (values) => {
-      console.log("Success:", values);
-
       const userid = values.username;
       const password = values.password;
 
@@ -57,26 +65,12 @@ export default class SignIn extends Component {
           .then(respon => {
             var dataAPI = respon;
             if(dataAPI.response_code != 200){
-              this.setState({ message: dataAPI.message });
+              this.setState({ login_message: dataAPI.message, togleAlert: true });
             }else{
-              localStorage.setItem("user_session", dataAPI.data.userid);
-              localStorage.setItem("user_name", dataAPI.data.name);
-              localStorage.setItem("user_type", dataAPI.data.user_type);
-              localStorage.setItem("id", dataAPI.data.id);
-              localStorage.setItem("password", dataAPI.data.password);
-              localStorage.setItem("email", dataAPI.data.email);
-              var newDate = new Date();
-              localStorage.setItem("yearFilter", newDate.getFullYear());
-
-              var now = newDate.getTime();
-              
-              localStorage.setItem('setupTime', now);
-              //window.location.href = "/dashboard";
-              //return <Redirect to="/dashboard" />
-            }})
-            .then(()=>{
+              this.setState({ togleAlert: false });
+              setSession(dataAPI.data);
               this.props.history.push('/dashboard');
-            });
+            }});
     };
 
     const onFinishFailed = (errorInfo) => {
@@ -102,6 +96,7 @@ export default class SignIn extends Component {
                 lg={{ span: 6, offset: 2 }}
                 md={{ span: 12 }}
               >
+                
                 <img
                   src={LogoLogin}
                   className="rounded"
@@ -110,9 +105,10 @@ export default class SignIn extends Component {
                 />
                 {/* <Title className="mb-15">Sign In</Title> */}
                 <br/><br/><br/>
-                <p >
+                <p>
                   Enter your username and password to sign in
                 </p>
+                {this.state.togleAlert ? <><Alert message={this.state.login_message} type="error" /><br/></> : null}
                 <Form
                   onFinish={onFinish}
                   onFinishFailed={onFinishFailed}
@@ -146,8 +142,7 @@ export default class SignIn extends Component {
                       },
                     ]}
                   >
-                    <Input 
-                      type= "password" 
+                    <Input.Password 
                       placeholder="Password" />
                   </Form.Item>
 
@@ -168,7 +163,9 @@ export default class SignIn extends Component {
                     >
                       SIGN IN
                     </Button>
+                    
                   </Form.Item>
+                  
                 </Form>
               </Col>
               <Col
@@ -185,7 +182,7 @@ export default class SignIn extends Component {
           <Footer>
             <p className="copyright">
               {" "}
-              Copyright © 2025 by <a href="#pablo">Sikarlia Tim</a>.{" "}
+              Copyright © 2025 by<a href="#pablo">Sikarlia Tim</a>.{" "}
             </p>
           </Footer>
         </Layout>
