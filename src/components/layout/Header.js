@@ -39,10 +39,11 @@ import {
   RightOutlined,
 } from "@ant-design/icons";
 
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import avtar from "../../assets/images/team-2.jpg";
 import BgProfile from "../../assets/images/bg-profile.jpg";
+import { logout, getPenandatangan } from "../../utils/general-func";
 
 const ButtonContainer = styled.div`
   .ant-btn-primary {
@@ -269,6 +270,9 @@ const setting = [
 ];
 function handleChange(value) {
   console.log(value);
+  getPenandatangan(value, "Koordinator");
+  getPenandatangan(value, "PPK");
+  getPenandatangan(value, "PPBJ");
   
 }
 
@@ -281,6 +285,7 @@ function Header({
   handleSidenavType,
   handleFixedNavbar,
 }) {
+  
   const { Title, Text } = Typography;
 
   const [visible, setVisible] = useState(false);
@@ -292,6 +297,12 @@ function Header({
   const hideDrawer = () => setVisible(false);
   const { Option } = Select;
   const {Meta} = Card;
+
+  function user_logout() {
+    logout();
+    window.location.href = "/";
+  }
+
   function drawYearOptions(){
     var years = JSON.parse(localStorage.getItem("years"));
     var ret = [];
@@ -318,7 +329,7 @@ function Header({
           </div>
         </Col>
         <Col span={24} md={18} className="header-control">
-          <Button type="link" onClick={showDrawer}>
+          <Button type="link" title="Profile" onClick={showDrawer}>
             {profile}
           </Button>
           <Button
@@ -342,7 +353,7 @@ function Header({
                 cover={
                   <div className="gradent h-full col-content">
                     <div className="card-content">
-                    <Title level={5}>Rabu, 26 Maret 2025</Title>
+                    <Title level={5}>{localStorage.getItem("tanggal_lengkap")}</Title>
                     </div>
                   </div>
                 }
@@ -353,7 +364,7 @@ function Header({
                     <EditOutlined/><br/>Edit Profile
                   </div>,
                   <div
-                    onClick={()=>{console.log("click logout")}}
+                    onClick={()=>{user_logout()}}
                   >
                     <LogoutOutlined key="logout" /><br/>Logout
                   </div>,
@@ -361,8 +372,8 @@ function Header({
               >
                 <Meta
                   avatar={<Avatar src="https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_25.png" />}
-                  title="Mahendra Pratama"
-                  description="User"
+                  title={localStorage.getItem("user_name")}
+                  description={localStorage.getItem("email")}
                 />
               </Card>
               <br/><br/><br/>
