@@ -13,7 +13,7 @@
 // import { useState } from "react";
 import { Menu, Button } from "antd";
 import { NavLink, useLocation } from "react-router-dom";
-import logo from "../../assets/images/logo.png";
+import logo from "../../assets/images/logo/logo_baru.png";
 
 function Sidenav({ color }) {
   const { pathname } = useLocation();
@@ -164,7 +164,6 @@ function Sidenav({ color }) {
     <>
       <div className="brand">
         <img src={logo} alt="" />
-        <span>Muse Dashboard</span>
       </div>
       <hr />
       <Menu theme="light" mode="inline">

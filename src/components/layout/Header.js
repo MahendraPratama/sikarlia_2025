@@ -25,18 +25,24 @@ import {
   Drawer,
   Typography,
   Switch,
+  Select,
+  Menu,
+  message,
+  Card,
 } from "antd";
-
 import {
   SearchOutlined,
-  StarOutlined,
-  TwitterOutlined,
-  FacebookFilled,
+  SettingOutlined,
+  EditOutlined,
+  LogoutOutlined,
+  UserOutlined,
+  RightOutlined,
 } from "@ant-design/icons";
 
 import { NavLink, Link } from "react-router-dom";
 import styled from "styled-components";
 import avtar from "../../assets/images/team-2.jpg";
+import BgProfile from "../../assets/images/bg-profile.jpg";
 
 const ButtonContainer = styled.div`
   .ant-btn-primary {
@@ -182,7 +188,20 @@ const menu = (
     )}
   />
 );
-
+function handleMenuClick(e) {
+  message.info('Click on menu item.');
+  console.log('click', e);
+}
+const dropdown_profile = (
+  <Menu onClick={handleMenuClick}>
+    <Menu.Item key="1" icon={<UserOutlined />}>
+      Profile
+    </Menu.Item>
+    <Menu.Item key="2" icon={<UserOutlined />}>
+      Logout
+    </Menu.Item>
+  </Menu>
+);
 const logsetting = [
   <svg
     width="20"
@@ -248,6 +267,10 @@ const setting = [
     ></path>
   </svg>,
 ];
+function handleChange(value) {
+  console.log(value);
+  
+}
 
 function Header({
   placement,
@@ -267,6 +290,19 @@ function Header({
 
   const showDrawer = () => setVisible(true);
   const hideDrawer = () => setVisible(false);
+  const { Option } = Select;
+  const {Meta} = Card;
+  function drawYearOptions(){
+    var years = JSON.parse(localStorage.getItem("years"));
+    var ret = [];
+  
+    years.forEach(element => {
+      ret.push(<Option key={element} value={element}>{element}</Option>);
+    });
+    
+    return ret;
+  }
+
 
   return (
     <>
@@ -275,37 +311,15 @@ function Header({
       </div>
       <Row gutter={[24, 0]}>
         <Col span={24} md={6}>
-          <Breadcrumb>
-            <Breadcrumb.Item>
-              <NavLink to="/">Pages</NavLink>
-            </Breadcrumb.Item>
-            <Breadcrumb.Item style={{ textTransform: "capitalize" }}>
-              {name.replace("/", "")}
-            </Breadcrumb.Item>
-          </Breadcrumb>
           <div className="ant-page-header-heading">
-            <span
-              className="ant-page-header-heading-title"
-              style={{ textTransform: "capitalize" }}
-            >
-              {subName.replace("/", "")}
-            </span>
+            <Select defaultValue={localStorage.getItem("yearFilter")} style={{ width: 120 }} onChange={handleChange}>
+              {drawYearOptions()}
+            </Select>
           </div>
         </Col>
         <Col span={24} md={18} className="header-control">
-          <Badge size="small" count={4}>
-            <Dropdown overlay={menu} trigger={["click"]}>
-              <a
-                href="#pablo"
-                className="ant-dropdown-link"
-                onClick={(e) => e.preventDefault()}
-              >
-                {bell}
-              </a>
-            </Dropdown>
-          </Badge>
           <Button type="link" onClick={showDrawer}>
-            {logsetting}
+            {profile}
           </Button>
           <Button
             type="link"
@@ -315,6 +329,7 @@ function Header({
             {toggler}
           </Button>
           <Drawer
+            style={{padding:"0px"}}
             className="settings-drawer"
             mask={true}
             width={360}
@@ -323,6 +338,34 @@ function Header({
             visible={visible}
           >
             <div layout="vertical">
+              <Card bordered={false} className="criclebox card-info-2 h-full"
+                cover={
+                  <div className="gradent h-full col-content">
+                    <div className="card-content">
+                    <Title level={5}>Rabu, 26 Maret 2025</Title>
+                    </div>
+                  </div>
+                }
+                actions={[
+                  <div
+                    onClick={()=>{console.log("click edit profile")}}
+                  >
+                    <EditOutlined/><br/>Edit Profile
+                  </div>,
+                  <div
+                    onClick={()=>{console.log("click logout")}}
+                  >
+                    <LogoutOutlined key="logout" /><br/>Logout
+                  </div>,
+                ]}
+              >
+                <Meta
+                  avatar={<Avatar src="https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_25.png" />}
+                  title="Mahendra Pratama"
+                  description="User"
+                />
+              </Card>
+              <br/><br/><br/>
               <div className="header-top">
                 <Title level={4}>
                   Configurator
@@ -396,7 +439,7 @@ function Header({
                   <Title level={5}>Navbar Fixed </Title>
                   <Switch onChange={(e) => handleFixedNavbar(e)} />
                 </div>
-                <div className="ant-docment">
+                {/* <div className="ant-docment">
                   <ButtonContainer>
                     <Button type="black" size="large">
                       FREE DOWNLOAD
@@ -407,9 +450,9 @@ function Header({
                 <div className="viewstar">
                   <a href="#pablo">{<StarOutlined />} Star</a>
                   <a href="#pablo"> 190</a>
-                </div>
+                </div> */}
 
-                <div className="ant-thank">
+                {/* <div className="ant-thank">
                   <Title level={5} className="mb-2">
                     Thank you for sharing!
                   </Title>
@@ -417,14 +460,18 @@ function Header({
                     <Button type="black">{<TwitterOutlined />}TWEET</Button>
                     <Button type="black">{<FacebookFilled />}SHARE</Button>
                   </ButtonContainer>
-                </div>
+                </div> */}
               </div>
             </div>
           </Drawer>
-          <Link to="/sign-in" className="btn-sign-in">
+          {/* <Dropdown overlay={dropdown_profile}>
+            <Button type="link">
             {profile}
-            <span>Sign in</span>
-          </Link>
+            </Button>
+          </Dropdown> */}
+          {/* <Link to="/sign-in" className="btn-sign-in">
+            
+          </Link> */}
           <Input
             className="header-search"
             placeholder="Type here..."

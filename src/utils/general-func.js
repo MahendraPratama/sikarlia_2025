@@ -6,9 +6,18 @@ export const setSession = (dataSession) => {
     localStorage.setItem("password", dataSession.password);
     localStorage.setItem("email", dataSession.email);
     var newDate = new Date();
-    localStorage.setItem("yearFilter", newDate.getFullYear());
-
+    var yearNow = newDate.getFullYear();
+    localStorage.setItem("yearFilter", yearNow);
+    
+    var years = [];
+    var yearStart = 2021;
+    do {
+        years.push(yearStart);
+        yearStart++;
+    }while (yearStart <= yearNow);
     var now = newDate.getTime();
     
     localStorage.setItem('setupTime', now);
+    localStorage.setItem('years', JSON.stringify(years));
+    console.log(years);
 }
