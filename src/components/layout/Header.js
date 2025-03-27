@@ -43,7 +43,8 @@ import { NavLink, Link, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import avtar from "../../assets/images/team-2.jpg";
 import BgProfile from "../../assets/images/bg-profile.jpg";
-import { logout, getPenandatangan } from "../../utils/general-func";
+import { logout } from "../../utils/general-func";
+import { getPenandatangan, getDashboardInfo } from "../../utils/general-api";
 
 const ButtonContainer = styled.div`
   .ant-btn-primary {
@@ -268,12 +269,15 @@ const setting = [
     ></path>
   </svg>,
 ];
-function handleChange(value) {
+async function handleChange(value) {
   console.log(value);
-  getPenandatangan(value, "Koordinator");
-  getPenandatangan(value, "PPK");
-  getPenandatangan(value, "PPBJ");
-  
+  await getPenandatangan(value, "Koordinator");
+  await getPenandatangan(value, "PPK");
+  await getPenandatangan(value, "PPBJ");
+  await getDashboardInfo(value, localStorage.getItem("user_session"));
+  localStorage.setItem("yearFilter", value);
+  window.location.reload();
+
 }
 
 function Header({

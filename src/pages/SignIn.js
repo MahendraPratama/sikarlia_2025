@@ -9,7 +9,7 @@
 =========================================================
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
-import React, { Component } from "react";
+import React, { Component, useId } from "react";
 import { Link } from "react-router-dom";
 import {
   Layout,
@@ -47,30 +47,40 @@ export default class SignIn extends Component {
       togleAlert:false,
     }
   }
+  async callApiSignin (userid, password) {
+    var IsLogin = false;
+    const requestOptions = {
+      method: 'POST',
+      // headers: { 'Content-Type': 'application/json',
+      // 'Access-Control-Allow-Origin':'*',
+      // 'access-control-allow-headers':'Authorization, Content-Type' },
+      body: JSON.stringify({ userid: userid, password: md5(password) })
+    };
+    const response = await fetch(process.env.REACT_APP_URL_API+'/rest/login.php', requestOptions);
+    const data = await response.json();
+    if(data.response_code != 200){
+      this.setState({ login_message: data.message, data: true });
+    }else{
+      this.setState({ togleAlert: false });
+      const wait = await setSession(data.data);
+      this.props.history.push('/dashboard');
+    }
+        // .then(response => response.json())
+        // .then(respon => {
+        //   var dataAPI = respon;
+        //   if(dataAPI.response_code != 200){
+        //     this.setState({ login_message: dataAPI.message, togleAlert: true });
+        //   }else{
+        //     this.setState({ togleAlert: false });
+        //     var wiat = await setSession(dataAPI.data);
+        //     this.props.history.push('/dashboard');
+        //   }});
+  }
   render() {
     const onFinish = (values) => {
       const userid = values.username;
       const password = values.password;
-
-      var IsLogin = false;
-      const requestOptions = {
-        method: 'POST',
-        // headers: { 'Content-Type': 'application/json',
-        // 'Access-Control-Allow-Origin':'*',
-        // 'access-control-allow-headers':'Authorization, Content-Type' },
-        body: JSON.stringify({ userid: userid, password: md5(password) })
-      };
-      fetch(process.env.REACT_APP_URL_API+'/rest/login.php', requestOptions)
-          .then(response => response.json())
-          .then(respon => {
-            var dataAPI = respon;
-            if(dataAPI.response_code != 200){
-              this.setState({ login_message: dataAPI.message, togleAlert: true });
-            }else{
-              this.setState({ togleAlert: false });
-              setSession(dataAPI.data);
-              this.props.history.push('/dashboard');
-            }});
+      this.callApiSignin(userid, password);
     };
 
     const onFinishFailed = (errorInfo) => {

@@ -1,4 +1,10 @@
-export const setSession = (dataSession) => {
+import {
+    getDashboardInfo,
+    getPenandatangan,
+} from "../utils/general-api";
+
+
+export async function setSession (dataSession) {
 
     localStorage.setItem("user_session", dataSession.userid);
     localStorage.setItem("user_name", dataSession.name);
@@ -21,33 +27,10 @@ export const setSession = (dataSession) => {
     localStorage.setItem('setupTime', now);
     localStorage.setItem('years', JSON.stringify(years));
     localStorage.setItem('tanggal_lengkap', getTanggalProfile(newDate));
-    getPenandatangan(yearNow, "Koordinator");
-    getPenandatangan(yearNow, "PPK");
-    getPenandatangan(yearNow, "PPBJ");
-}
-
-export const getPenandatangan = (yearInput, kategori) => {
-    const REACT_APP_URL_API="https://www.sikarlia.com/api"
-    const ro1 = {
-        method: 'POST',
-        //headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: kategori, year:yearInput })
-      };
-      fetch(REACT_APP_URL_API+'/rest/lookupPdt.php', ro1)
-          .then(response => response.json())
-          .then(respon => {
-            var dataAPI = respon;
-            
-            if(dataAPI.response_code != 200){
-              
-            }else{
-              localStorage.setItem("pdt"+kategori, JSON.stringify(dataAPI.data));
-              console.log("pdtKoordinator");
-              console.log(dataAPI.data);
-  
-              //this.setState({ pdtKoordinator : dataAPI});
-            }
-          });
+    await getPenandatangan(yearNow, "Koordinator");
+    await getPenandatangan(yearNow, "PPK");
+    await getPenandatangan(yearNow, "PPBJ");
+    await getDashboardInfo(yearNow, dataSession.userid);
 }
 
 const getLocStor = (variable) => {
@@ -71,5 +54,31 @@ const getTanggalProfile = (date) =>{
 
 export const logout = () => {
     localStorage.clear();
+}
+
+export const convertTipeKontrak = (type) => {
+    var arrTipe = [
+        {tipe:'50200NonPL',name:'Barang & Jasa Lainnya | 50-200', filename:'/kontrak50_200_test.docx'},
+        {tipe:'100NonPL',name:'Jasa Konsultasi | 100', filename:'/kontrak50_200_test.docx'},
+        {tipe:'50200PL',name:'Barang & Jasa Lainnya | 50-200 PL', filename:'/kontrak50_200PL.docx'},
+        {tipe:'100PL',name:'Jasa Konsultasi | 100 PL', filename:'/kontrak50_200PL.docx'},
+        {tipe:'200up',name:'Barang & Jasa Lainnya | > 200', filename:'/kontrak200up.docx'},
+        {tipe:'100up',name:'Jasa Konsultasi | > 100', filename:'/kontrak200up.docx'},
+      ];
+
+    var dtSel = arrTipe.filter(x=>x.tipe==type);
+
+    return dtSel[0].name;
+}
+
+export const commafy = ( num ) => {
+    var str = num.toString().split('.');
+    if (str[0].length >= 5) {
+        str[0] = str[0].replace(/(\d)(?=(\d{3})+$)/g, '$1,');
+    }
+    if (str[1] && str[1].length >= 5) {
+        str[1] = str[1].replace(/(\d{3})/g, '$1 ');
+    }
+    return str.join('.');
 }
 
