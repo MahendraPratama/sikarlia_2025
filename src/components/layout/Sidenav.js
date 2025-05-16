@@ -42,7 +42,7 @@ function Sidenav({ color }) {
     </svg>,
   ];
 
-  const tables = [
+  const kontrak = [
     <svg
       width="20"
       height="20"
@@ -181,16 +181,16 @@ function Sidenav({ color }) {
           </NavLink>
         </Menu.Item>
         <Menu.Item key="2">
-          <NavLink to="/tables">
+          <NavLink to="/kontrak">
             <span
               className="icon"
               style={{
-                background: page === "tables" ? color : "",
+                background: page === "kontrak" ? color : "",
               }}
             >
-              {tables}
+              {kontrak}
             </span>
-            <span className="label">Tables</span>
+            <span className="label">Kontrak</span>
           </NavLink>
         </Menu.Item>
         <Menu.Item key="3">
@@ -203,7 +203,7 @@ function Sidenav({ color }) {
             >
               {billing}
             </span>
-            <span className="label">Billing</span>
+            <span className="label">Kuitansi</span>
           </NavLink>
         </Menu.Item>
         <Menu.Item key="4">
@@ -216,35 +216,7 @@ function Sidenav({ color }) {
             >
               {rtl}
             </span>
-            <span className="label">RTL</span>
-          </NavLink>
-        </Menu.Item>
-        <Menu.Item className="menu-item-header" key="5">
-          Account Pages
-        </Menu.Item>
-        <Menu.Item key="6">
-          <NavLink to="/profile">
-            <span
-              className="icon"
-              style={{
-                background: page === "profile" ? color : "",
-              }}
-            >
-              {profile}
-            </span>
-            <span className="label">Profile</span>
-          </NavLink>
-        </Menu.Item>
-        <Menu.Item key="7">
-          <NavLink to="/sign-in">
-            <span className="icon">{signin}</span>
-            <span className="label">Sign In</span>
-          </NavLink>
-        </Menu.Item>
-        <Menu.Item key="8">
-          <NavLink to="/sign-up">
-            <span className="icon">{signup}</span>
-            <span className="label">Sign Up</span>
+            <span className="label">Dokumen Saya</span>
           </NavLink>
         </Menu.Item>
       </Menu>

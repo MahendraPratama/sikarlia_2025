@@ -82,3 +82,12 @@ export const commafy = ( num ) => {
     return str.join('.');
 }
 
+export const convertTanggal = (tglString) => {
+    var arrTgl = tglString.split('-');
+    const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    let month = months[arrTgl[1]];
+
+    return arrTgl[2] + " " + month + " " + arrTgl[0];
+}
+

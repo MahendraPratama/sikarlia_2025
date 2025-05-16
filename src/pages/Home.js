@@ -34,9 +34,12 @@ import {
   FileTextOutlined,
   SelectOutlined,
   CloudDownloadOutlined,
+  EditFilled,
 } from "@ant-design/icons";
 
-import { commafy, convertTipeKontrak } from "../utils/general-func";
+import { commafy, convertTipeKontrak, convertTanggal } from "../utils/general-func";
+import IconSikarlia from "../assets/images/logo/ico.png";
+
 
 class Home extends Component {
   constructor(props){
@@ -68,11 +71,26 @@ class Home extends Component {
         bnb: "bnb2",
       }
     ];
-    var dtAkt = dtDash.dataAktivitas[0];
-    var tipeKontrak = convertTipeKontrak(dtAkt.tipeKontrak);
-    var judulKontrak = dtAkt.namaPekerjaan;
-    var perusahaan = dtAkt.namaPerusahaan;
-    var nilaiKontrak = commafy(dtAkt.hrgtotal);
+    if(dtDash.dataAktivitas[0]!=undefined){
+      var dtAkt = dtDash.dataAktivitas[0];
+      var tipeKontrak = convertTipeKontrak(dtAkt.tipeKontrak);
+      var judulKontrak = dtAkt.namaPekerjaan;
+      var perusahaan = dtAkt.namaPerusahaan;
+      var nilaiKontrak = commafy(dtAkt.hrgtotal);
+      var tglKontrak = convertTanggal(dtAkt.date_created);
+    }
+
+    const dataInfo = [
+      {
+        title:"Update Sikarlia 2025",
+        desc:"SiKarlia 2025 hadir dengan tampilan baru dan fitur tambahan untuk meningkatkan efisiensi! Sistem automasi dokumen pertanggungjawaban kontrak kini lebih intuitif, cepat, dan akurat, membantu Anda mengelola dokumen dengan mudah dan aman."
+      },
+      {
+        title:"Update Nomor SK PPBJ dan DIPA 2025",
+        desc:"SiKarlia 2025 kini mendukung update otomatis Nomor SK PPBJ dan DIPA 2025 pada template dokumen kontrak! Proses administrasi lebih cepat, akurat, dan efisien tanpa perlu input manual. Pastikan dokumen Anda selalu sesuai regulasi terbaru"
+      }
+    ]
+    
 
     return (
       <>
@@ -145,12 +163,21 @@ class Home extends Component {
 
           <Row gutter={[24, 0]}>
             <Col xs={24}><h3 style={{padding:15}}>Aktivitas</h3></Col>
-            <Col xs={24} sm={24} md={24} lg={24} xl={24} className="mb-24">
+            {
+              
+              
+              dtAkt==null?
+              
+              <Col xs={24}><p style={{padding:20}}>- Belum ada aktivitas</p></Col>
+              
+              :
+
+              <Col xs={24} sm={24} md={24} lg={24} xl={24} className="mb-24">
               <Card bordered={false} className="criclebox card-info-2 h-full"
               >
                 <Row justify="space-between" align="middle" gutter={[24, 0]}>
                     <Col span={24} md={16} className="col-info">
-                    <p style={{color:"#0202c7", paddingLeft:10, fontSize:12}}>Dokumen Kontrak | {tipeKontrak}</p>
+                      <p style={{color:"#0202c7", paddingLeft:10, fontSize:12}}>Dokumen Kontrak | {tipeKontrak}</p>
                       <Avatar.Group>
                         <Avatar size={74} shape="square" src="https://img.icons8.com/?size=100&id=119056&format=png&color=000000" />
                         <div className="avatar-info" style={{paddingLeft:20}}>
@@ -161,7 +188,9 @@ class Home extends Component {
                             <Avatar size={20} src="https://img.icons8.com/?size=100&id=lrrWa22VGVi6&format=png&color=000000"/>
                             &nbsp;<p style={{fontSize:12}}>{perusahaan}</p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                             <Avatar size={20} src="https://img.icons8.com/?size=100&id=KyaxbI6JuwGT&format=png&color=000000"/>
-                            &nbsp;<p style={{fontSize:12}}>Rp. {nilaiKontrak}</p>
+                            &nbsp;<p style={{fontSize:12}}>Rp. {nilaiKontrak}</p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <Avatar size={20} src="https://img.icons8.com/?size=100&id=PTVr218c3sJO&format=png&color=000000"/>
+                            &nbsp;<p style={{fontSize:12}}>{tglKontrak}</p>
                           </Row>
                           
                         </div>
@@ -189,98 +218,31 @@ class Home extends Component {
                     </Row>
               </Card>
             </Col>
+            }
           </Row> 
 
           <Row gutter={[24, 0]}>
             <Col xs={24}><h3 style={{padding:15}}>Informasi</h3></Col>
-            <Col xs={24} sm={24} md={24} lg={24} xl={24} className="mb-24">
-              <Card bordered={false} className="criclebox card-info-2 h-full"
-              >
-                <Row justify="space-between" align="middle" gutter={[24, 0]}>
-                    <Col span={24} md={16} className="col-info">
-                    <p style={{color:"#0202c7", paddingLeft:10, fontSize:12}}>Dokumen Kontrak | Barang & Jasa Lainnya | 50-200</p>
+            {dataInfo.map((c, index)=>(
+              <Col key={index} xs={24} sm={24} md={24} lg={24} xl={24} className="mb-24">
+                <Card bordered={false} className="criclebox card-info-2 h-full"
+                >
+                  <Row justify="space-between" align="middle" gutter={[24, 0]}>
+                    <Col span={24} md={24} className="col-info">
                       <Avatar.Group>
-                        <Avatar size={74} shape="square" src="https://img.icons8.com/?size=100&id=119056&format=png&color=000000" />
+                        <Avatar size={74} shape="square" src={IconSikarlia} />
                         <div className="avatar-info" style={{paddingLeft:20}}>
                           <h3 className="font-semibold m-0">
-                            Pembuatan Modul Literasi Digital seri Dampak Teknologi Digital terhadap Psikologi
+                            {c.title}
                           </h3>
-                          <Row>
-                            <Avatar size={20} src="https://img.icons8.com/?size=100&id=lrrWa22VGVi6&format=png&color=000000"/>
-                            &nbsp;<p style={{fontSize:12}}>PT. BINTANG BRAVO EXPLORA</p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                            <Avatar size={20} src="https://img.icons8.com/?size=100&id=KyaxbI6JuwGT&format=png&color=000000"/>
-                            &nbsp;<p style={{fontSize:12}}>Rp. 197,136,000</p>
-                          </Row>
-                          
+                          <p style={{fontSize:12}}>{c.desc}</p>                          
                         </div>
                       </Avatar.Group>
                     </Col>
                   </Row>
-                  <Row justify="space-between" align="middle">
-                      <Col xs={6} className="col-info">
-                      </Col>
-                      <Col xs={12}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "flex-end",
-                        }}
-                      >
-                        <Button shape="round" style={{backgroundColor:"#40c702", color:"white"}}>
-                          <CloudDownloadOutlined/>Download
-                        </Button>
-                        &nbsp;
-                        <Button shape="round">
-                          <EditOutlined/>Edit
-                        </Button>
-                      </Col>
-                    </Row>
-              </Card>
-            </Col>
-            <Col xs={24} sm={24} md={24} lg={24} xl={24} className="mb-24">
-              <Card bordered={false} className="criclebox card-info-2 h-full"
-              >
-                <Row justify="space-between" align="middle" gutter={[24, 0]}>
-                    <Col span={24} md={16} className="col-info">
-                    <p style={{color:"#0202c7", paddingLeft:10, fontSize:12}}>Dokumen Kontrak | Barang & Jasa Lainnya | 50-200</p>
-                      <Avatar.Group>
-                        <Avatar size={74} shape="square" src="https://img.icons8.com/?size=100&id=119056&format=png&color=000000" />
-                        <div className="avatar-info" style={{paddingLeft:20}}>
-                          <h3 className="font-semibold m-0">
-                            Pembuatan Modul Literasi Digital seri Dampak Teknologi Digital terhadap Psikologi
-                          </h3>
-                          <Row>
-                            <Avatar size={20} src="https://img.icons8.com/?size=100&id=lrrWa22VGVi6&format=png&color=000000"/>
-                            &nbsp;<p style={{fontSize:12}}>PT. BINTANG BRAVO EXPLORA</p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                            <Avatar size={20} src="https://img.icons8.com/?size=100&id=KyaxbI6JuwGT&format=png&color=000000"/>
-                            &nbsp;<p style={{fontSize:12}}>Rp. 197,136,000</p>
-                          </Row>
-                          
-                        </div>
-                      </Avatar.Group>
-                    </Col>
-                  </Row>
-                  <Row justify="space-between" align="middle">
-                      <Col xs={6} className="col-info">
-                      </Col>
-                      <Col xs={12}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "flex-end",
-                        }}
-                      >
-                        <Button shape="round" style={{backgroundColor:"#40c702", color:"white"}}>
-                          <CloudDownloadOutlined/>Download
-                        </Button>
-                        &nbsp;
-                        <Button shape="round">
-                          <EditOutlined/>Edit
-                        </Button>
-                      </Col>
-                    </Row>
-              </Card>
-            </Col>
+                </Card>
+              </Col>
+            ))}
           </Row>
         </div>
       </>
