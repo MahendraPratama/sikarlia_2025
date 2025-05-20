@@ -342,6 +342,7 @@ const data = [
     ),
   },
 ];
+
 // project table start
 const project = [
   {
@@ -595,7 +596,7 @@ function Tables() {
         <Row gutter={[24, 0]}>
           <Col xs="24" xl={24}>
             <Card
-              bordered={false}
+              variant={"borderless"}
               className="criclebox tablespace mb-24"
               title="Authors Table"
               extra={
@@ -618,7 +619,7 @@ function Tables() {
             </Card>
 
             <Card
-              bordered={false}
+              variant={"borderless"}
               className="criclebox tablespace mb-24"
               title="Projects Table"
               extra={

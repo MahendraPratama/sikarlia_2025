@@ -270,7 +270,7 @@ const setting = [
   </svg>,
 ];
 async function handleChange(value) {
-  console.log(value);
+  
   await getPenandatangan(value, "Koordinator");
   await getPenandatangan(value, "PPK");
   await getPenandatangan(value, "PPBJ");
@@ -325,9 +325,9 @@ function Header({
         {setting}
       </div>
       <Row gutter={[24, 0]}>
-        <Col span={24} md={6}>
+        <Col span={24} md={6}> 
           <div className="ant-page-header-heading">
-            <Select defaultValue={localStorage.getItem("yearFilter")} style={{ width: 120 }} onChange={handleChange}>
+            <Select title="Tahun Anggaran" defaultValue={localStorage.getItem("yearFilter")} style={{ width: 120 }} onChange={handleChange}>
               {drawYearOptions()}
             </Select>
           </div>
@@ -350,7 +350,7 @@ function Header({
             width={360}
             onClose={hideDrawer}
             placement={placement}
-            visible={visible}
+            open={visible}
           >
             <div layout="vertical">
               <Card bordered={false} className="criclebox card-info-2 h-full"
@@ -487,11 +487,6 @@ function Header({
           {/* <Link to="/sign-in" className="btn-sign-in">
             
           </Link> */}
-          <Input
-            className="header-search"
-            placeholder="Type here..."
-            prefix={<SearchOutlined />}
-          />
         </Col>
       </Row>
     </>

@@ -1,3 +1,5 @@
+import React from 'react';
+import { Button, message, Popconfirm } from 'antd';
 import {
     getDashboardInfo,
     getPenandatangan,
@@ -68,7 +70,7 @@ export const convertTipeKontrak = (type) => {
 
     var dtSel = arrTipe.filter(x=>x.tipe==type);
 
-    return dtSel[0].name;
+    return dtSel[0];
 }
 
 export const commafy = ( num ) => {
@@ -86,7 +88,7 @@ export const convertTanggal = (tglString) => {
     var arrTgl = tglString.split('-');
     const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", 
         "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    let month = months[arrTgl[1]];
+    let month = months[Number(arrTgl[1])-1];
 
     return arrTgl[2] + " " + month + " " + arrTgl[0];
 }

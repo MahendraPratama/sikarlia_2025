@@ -7,7 +7,7 @@
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
-    "antd": "^4.16.6",
+    "antd": "^5.25.2",
     "apexcharts": "^3.27.1",
     "cross-env": "^7.0.3",
     "install": "^0.13.0",

@@ -39,6 +39,7 @@ import {
 
 import { commafy, convertTipeKontrak, convertTanggal } from "../utils/general-func";
 import IconSikarlia from "../assets/images/logo/ico.png";
+import { iconKontrak, iconPerusahaan, iconTanggalKontrak, iconNilaiKontrak } from "../utils/general-ico";
 
 
 class Home extends Component {
@@ -73,7 +74,7 @@ class Home extends Component {
     ];
     if(dtDash.dataAktivitas[0]!=undefined){
       var dtAkt = dtDash.dataAktivitas[0];
-      var tipeKontrak = convertTipeKontrak(dtAkt.tipeKontrak);
+      var tipeKontrak = convertTipeKontrak(dtAkt.tipeKontrak).name;
       var judulKontrak = dtAkt.namaPekerjaan;
       var perusahaan = dtAkt.namaPerusahaan;
       var nilaiKontrak = commafy(dtAkt.hrgtotal);
@@ -140,7 +141,7 @@ class Home extends Component {
                 xl={12}
                 className="mb-24"
               >
-                <Card bordered={false} className="criclebox ">
+                <Card variant={"borderless"} className="criclebox ">
                   <div className="number">
                     <Row align="middle" gutter={[24, 0]}>
                       <Col xs={18}>
@@ -173,23 +174,23 @@ class Home extends Component {
               :
 
               <Col xs={24} sm={24} md={24} lg={24} xl={24} className="mb-24">
-              <Card bordered={false} className="criclebox card-info-2 h-full"
+              <Card variant={"borderless"} className="criclebox card-info-2 h-full"
               >
                 <Row justify="space-between" align="middle" gutter={[24, 0]}>
                     <Col span={24} md={16} className="col-info">
                       <p style={{color:"#0202c7", paddingLeft:10, fontSize:12}}>Dokumen Kontrak | {tipeKontrak}</p>
                       <Avatar.Group>
-                        <Avatar size={74} shape="square" src="https://img.icons8.com/?size=100&id=119056&format=png&color=000000" />
+                        <Avatar size={74} shape="square" src={iconKontrak} />
                         <div className="avatar-info" style={{paddingLeft:20}}>
                           <h3 className="font-semibold m-0">
                             {judulKontrak}
                           </h3>
                           <Row>
-                            <Avatar size={20} src="https://img.icons8.com/?size=100&id=lrrWa22VGVi6&format=png&color=000000"/>
+                            <Avatar size={20} src={iconPerusahaan}/>
                             &nbsp;<p style={{fontSize:12}}>{perusahaan}</p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                            <Avatar size={20} src="https://img.icons8.com/?size=100&id=KyaxbI6JuwGT&format=png&color=000000"/>
+                            <Avatar size={20} src={iconNilaiKontrak}/>
                             &nbsp;<p style={{fontSize:12}}>Rp. {nilaiKontrak}</p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                            <Avatar size={20} src="https://img.icons8.com/?size=100&id=PTVr218c3sJO&format=png&color=000000"/>
+                            <Avatar size={20} src={iconTanggalKontrak}/>
                             &nbsp;<p style={{fontSize:12}}>{tglKontrak}</p>
                           </Row>
                           
@@ -225,7 +226,7 @@ class Home extends Component {
             <Col xs={24}><h3 style={{padding:15}}>Informasi</h3></Col>
             {dataInfo.map((c, index)=>(
               <Col key={index} xs={24} sm={24} md={24} lg={24} xl={24} className="mb-24">
-                <Card bordered={false} className="criclebox card-info-2 h-full"
+                <Card variant={"borderless"} className="criclebox card-info-2 h-full"
                 >
                   <Row justify="space-between" align="middle" gutter={[24, 0]}>
                     <Col span={24} md={24} className="col-info">
