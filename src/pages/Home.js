@@ -35,11 +35,13 @@ import {
   SelectOutlined,
   CloudDownloadOutlined,
   EditFilled,
+  SyncOutlined,
 } from "@ant-design/icons";
 
-import { commafy, convertTipeKontrak, convertTanggal } from "../utils/general-func";
+import { commafy, convertTipeKontrak, convertTanggal, generateViewerKontrak, fileMaster } from "../utils/general-func";
 import IconSikarlia from "../assets/images/logo/ico.png";
 import { iconKontrak, iconPerusahaan, iconTanggalKontrak, iconNilaiKontrak } from "../utils/general-ico";
+import { generateDocument } from "../utils/generator-docx";
 
 
 class Home extends Component {
@@ -47,7 +49,20 @@ class Home extends Component {
     super(props)
     this.state={
       //dtDash:false,
+      loadingDownload: false
     }
+  }
+  async downloadRecentAct(){
+    this.setState({loadingDownload: true});
+    setTimeout(() => {
+      this.setState({loadingDownload: false});
+    }, 3000);
+    var dtDash = JSON.parse(localStorage.getItem("dataDashboard"));
+    var dtAkt = dtDash.dataAktivitas[0];
+
+    var dataRet = await generateViewerKontrak(dtAkt);
+    var dt = dataRet.dataProcessed;
+    generateDocument(dt,fileMaster[dt.tipeKontrak.concat("-",dt.LSorNon)]);
   }
   render () {
     const { Title, Text } = Typography;
@@ -208,8 +223,13 @@ class Home extends Component {
                           justifyContent: "flex-end",
                         }}
                       >
-                        <Button shape="round" style={{backgroundColor:"#40c702", color:"white"}}>
-                          <CloudDownloadOutlined/>Download
+                        <Button shape="round" 
+                          loading={this.state.loadingDownload}
+                          icon={<CloudDownloadOutlined/>}
+                          onClick={()=>{this.downloadRecentAct()}}
+                          style={{backgroundColor:"#40c702", color:"white"}}
+                          >
+                          Download
                         </Button>
                         &nbsp;
                         <Button shape="round">

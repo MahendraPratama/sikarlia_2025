@@ -14,7 +14,7 @@ import {
   Row,
   Col,
   Card,
-  Statistic,
+  Drawer,
   Button,
   List,
   Descriptions,
@@ -28,30 +28,19 @@ import {
   Table,
   Input,
   Popconfirm,
+  Space,
 } from "antd";
 
-import { PlusCircleFilled, UserDeleteOutlined, SearchOutlined, EyeFilled, EditFilled, DeleteFilled  } from "@ant-design/icons";
-import { Component } from "react";
+import { PlusCircleFilled, UserDeleteOutlined, SearchOutlined, 
+  EyeFilled, EditFilled, DeleteFilled, CloseOutlined,
+  CloudDownloadOutlined, EditOutlined,
+} from "@ant-design/icons";
+import { Children, Component } from "react";
 
 import { deleteDataKontrak, loadDataKontrak } from "../utils/general-api";
 import { iconKontrak } from "../utils/general-ico";
-import { commafy, convertTanggal, convertTipeKontrak } from "../utils/general-func";
-
-const fileMaster = {
-  '50200PL-NonLS':'/kontrak50_200PL.docx',
-  '50200NonPL-NonLS':'/kontrak50_200.docx',
-  '200up-NonLS':'/kontrak200up.docx',
-  '100PL-NonLS':'/kontrak50_200PL.docx',
-  '100NonPL-NonLS':'/kontrak50_200.docx',
-  '100up-NonLS':'/kontrak200up.docx',
-
-  '50200PL-LS':'/kontrak50_200PL_LS.docx',
-  '50200NonPL-LS':'/kontrak50_200_LS.docx',
-  '200up-LS':'/kontrak200up_LS.docx',
-  '100PL-LS':'/kontrak50_200PL_LS.docx',
-  '100NonPL-LS':'/kontrak50_200_LS.docx',
-  '100up-LS':'/kontrak200up_LS.docx',
-}
+import { commafy, convertTanggal, convertTipeKontrak, generateViewerKontrak, kontrakPreview, fileMaster } from "../utils/general-func";
+import { generateDocument } from "../utils/generator-docx";
 
 class Kontrak extends Component {
   constructor(props){
@@ -62,7 +51,9 @@ class Kontrak extends Component {
       dataRender:[],
       dataToEdit:[],
       search:"",
-
+      toggleDrawer: false,
+      descPreviewKontrak:[],
+      loadingDownload: false,
     }
   }
   componentDidMount(){
@@ -82,26 +73,10 @@ class Kontrak extends Component {
   
   render (){
     const onChange = (e) => console.log(`radio checked:${e.target.value}`);
-    const { dataRender } = this.state;
+    const { dataRender, toggleDrawer, descPreviewKontrak } = this.state;
     const { Title } = Typography;
-    const formProps = {
-      name: "file",
-      action: "https://www.mocky.io/v2/5cc8019d300000980a055e76",
-      headers: {
-        authorization: "authorization-text",
-      },
-      onChange(info) {
-        if (info.file.status !== "uploading") {
-          console.log(info.file, info.fileList);
-        }
-        if (info.file.status === "done") {
-          message.success(`${info.file.name} file uploaded successfully`);
-        } else if (info.file.status === "error") {
-          message.error(`${info.file.name} file upload failed.`);
-        }
-      },
-    };
-    // table code start
+    const { Search } = Input;
+    
     const columns = [
       {
         title: "Nama Pekerjaan",
@@ -153,7 +128,7 @@ class Kontrak extends Component {
         render: text=>
           <>
             <Button title="Detail" color="cyan" variant="solid" shape="round" icon={<EyeFilled/>} size="small" 
-            
+              onClick={()=>{this.showDrawer(text)}}
             />
             &nbsp;
             <Button title="Ubah" color="primary" variant="solid" shape="round" icon={<EditFilled/>} size="small" />
@@ -174,22 +149,71 @@ class Kontrak extends Component {
    
     return (
       <>
+        <Drawer
+          title="Preview"
+          placement="top"
+          closable={false}
+          height={500}
+          onClose={()=>{this.closeDrawer()}}
+          open={toggleDrawer}
+          getContainer={false}
+          extra={
+            <Space>
+              <Button color="danger" size="small" variant="solid" 
+                onClick={()=>{this.closeDrawer()}} icon={<CloseOutlined/>}>
+                Close
+              </Button>
+            </Space>
+          }
+        >
+          <Row gutter={[24, 0]}>
+            <Col xs={6.5} xl={6.5}>
+              <iframe id="viewer" 
+                height="350px"
+                key={this.state.keyIframe}
+                src={
+                  this.state.urlIFrame
+                }
+              >
+              </iframe>
+            </Col>
+            <Col xs={17} xl={17}>
+              <Descriptions title="Info Kontrak" bordered items={descPreviewKontrak} size="small"/>
+              <br/>
+              <Space>
+                  <Button shape="round" 
+                    loading={this.state.loadingDownload}
+                    icon={<CloudDownloadOutlined/>}
+                    onClick={()=>{this.downloadKontrak()}}
+                    style={{backgroundColor:"#40c702", color:"white"}}
+                    >
+                    Download
+                  </Button>
+                  <Button shape="round">
+                  <EditOutlined/>Edit
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+        </Drawer>
+        <Row gutter={[24, 0]}>
+          <Col style={{padding:20}} xs="24" xl={24}>
+            <Button  size="small" type="primary" className="tag-primary" icon={<PlusCircleFilled />}>
+              Kontrak Baru
+            </Button>
+          </Col>
+        </Row>
+        
         <Row gutter={[24, 0]}>
           <Col xs="24" xl={24}>
             <Card
               variant={"borderless"}
               className="criclebox tablespace mb-24"
-              title={
-                <Button type="primary" className="tag-primary" icon={<PlusCircleFilled />}>
-                  Kontrak Baru
-                </Button>
-              }
+              title={"Data Kontrak"}
               extra={
-                  <Input
-                    //className="header-search"
-                    placeholder="Type here..."
-                    prefix={<SearchOutlined />}
-                  />
+                <Space>
+                  <Search size="large" placeholder="cari kontrak..." onSearch={this.searchData} style={{ width: 300 }} />
+                </Space>
               }
             >
               <div className="table-responsive">
@@ -211,6 +235,34 @@ class Kontrak extends Component {
   async confirmDelete(unique_id){
     await deleteDataKontrak(unique_id);
     this.loadData();
+  }
+
+  searchData = (searchText) => {
+    this.setState({search: searchText}, ()=>{
+      this.loadData();
+    });
+  }
+
+  async showDrawer(unique_id){//Preiview Kontrak
+    this.setState({toggleDrawer: true});
+    window.scrollTo(0,0);
+    var dataSelected = this.state.dataRender.find(x => x.unique_id === unique_id);
+    var objRet = kontrakPreview(dataSelected);
+    var dataRet = await generateViewerKontrak(dataSelected);
+    this.setState({descPreviewKontrak: objRet, urlIFrame: dataRet.urlIframe, dataToGenerate: dataRet.dataProcessed});
+  }
+
+  downloadKontrak(){
+    this.setState({loadingDownload: true});
+    setTimeout(() => {
+      this.setState({loadingDownload: false});
+    }, 3000);
+    var dt = this.state.dataToGenerate;
+    generateDocument(dt,fileMaster[dt.tipeKontrak.concat("-",dt.LSorNon)]);
+  }
+
+  closeDrawer(){
+    this.setState({toggleDrawer: false});
   }
 }
 

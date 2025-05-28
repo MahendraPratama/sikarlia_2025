@@ -9,7 +9,7 @@
 =========================================================
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
-import React, { Component, useId } from "react";
+import React, { Component, useId, createRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Layout,
@@ -23,6 +23,7 @@ import {
   Switch,
   Alert,
   Progress,
+  Spin,
 } from "antd";
 import signinbg from "../assets/images/background/robot-maskot-bg.png";
 import LogoLogin from "../assets/images/logo/logo_baru_tengah.png";
@@ -33,7 +34,8 @@ import {
   GithubOutlined,
 } from "@ant-design/icons";
 import md5 from 'md5';
-import { setSession } from "../utils/general-func";
+import { setSession, renderLoading } from "../utils/general-func";
+import Main from "../components/layout/Main";
 
 function onChange(checked) {
   console.log(`switch to ${checked}`);
@@ -42,12 +44,18 @@ const { Title } = Typography;
 const { Header, Footer, Content } = Layout;
 export default class SignIn extends Component {
   constructor(props){
-    super(props)
+    super(props);
     this.state={
       togleAlert:false,
-    }
+      stateLoading:false,
+    };
+  }
+  togleLoading(){
+    let curr = this.state.stateLoading;
+    this.setState({stateLoading: !curr});
   }
   async callApiSignin (userid, password) {
+    this.togleLoading();
     var IsLogin = false;
     const requestOptions = {
       method: 'POST',
@@ -58,13 +66,15 @@ export default class SignIn extends Component {
     };
     const response = await fetch(process.env.REACT_APP_URL_API+'/rest/login.php', requestOptions);
     const data = await response.json();
+    this.togleLoading();
     if(data.response_code != 200){
-      this.setState({ login_message: data.message, data: true });
+      this.setState({ login_message: data.message, togleAlert: true });
     }else{
       this.setState({ togleAlert: false });
       const wait = await setSession(data.data);
       this.props.history.push('/dashboard');
     }
+    
         // .then(response => response.json())
         // .then(respon => {
         //   var dataAPI = respon;
@@ -77,6 +87,7 @@ export default class SignIn extends Component {
         //   }});
   }
   render() {
+    const {stateLoading} = this.state;
     const onFinish = (values) => {
       const userid = values.username;
       const password = values.password;
@@ -98,6 +109,7 @@ export default class SignIn extends Component {
     }
     return (
       <>
+        {renderLoading(stateLoading)}
         <Layout className="layout-default layout-signin">
           <Content className="signin">
             <Row gutter={[24, 0]} justify="space-around">

@@ -16,11 +16,13 @@ import { Layout, Drawer, Affix } from "antd";
 import Sidenav from "./Sidenav";
 import Header from "./Header";
 import Footer from "./Footer";
+import { renderLoading } from "../../utils/general-func";
 
 const { Header: AntHeader, Content, Sider } = Layout;
 
 function Main({ children }) {
   const [visible, setVisible] = useState(false);
+  const [stateLoading, setLoading] = useState(false);
   const [placement, setPlacement] = useState("right");
   const [sidenavColor, setSidenavColor] = useState("#1890ff");
   const [sidenavType, setSidenavType] = useState("transparent");
@@ -30,6 +32,7 @@ function Main({ children }) {
   const handleSidenavType = (type) => setSidenavType(type);
   const handleSidenavColor = (color) => setSidenavColor(color);
   const handleFixedNavbar = (type) => setFixed(type);
+  const togleLoading = () => setLoading(!stateLoading);
 
   let { pathname } = useLocation();
   pathname = pathname.replace("/", "");
@@ -48,6 +51,7 @@ function Main({ children }) {
         pathname === "profile" ? "layout-profile" : ""
       } ${pathname === "rtl" ? "layout-dashboard-rtl" : ""}`}
     >
+      
       <Drawer
         title={false}
         placement={placement === "right" ? "left" : "right"}
@@ -95,6 +99,7 @@ function Main({ children }) {
         <Sidenav color={sidenavColor} />
       </Sider>
       <Layout>
+        {renderLoading(stateLoading)}
         {fixed ? (
           <Affix>
             <AntHeader className={`${fixed ? "ant-header-fixed" : ""}`}>
@@ -105,6 +110,7 @@ function Main({ children }) {
                 handleSidenavColor={handleSidenavColor}
                 handleSidenavType={handleSidenavType}
                 handleFixedNavbar={handleFixedNavbar}
+                togleLoading={togleLoading}
               />
             </AntHeader>
           </Affix>
@@ -117,10 +123,11 @@ function Main({ children }) {
               handleSidenavColor={handleSidenavColor}
               handleSidenavType={handleSidenavType}
               handleFixedNavbar={handleFixedNavbar}
+              togleLoading={togleLoading}
             />
           </AntHeader>
         )}
-        <Content className="content-ant">{children}</Content>
+        <Content className="content-ant" >{children}</Content>
         <Footer />
       </Layout>
     </Layout>

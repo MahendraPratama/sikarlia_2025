@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, message, Popconfirm } from 'antd';
 
-const REACT_APP_URL_API="https://www.sikarlia.com/api";
+export const REACT_APP_URL_API="https://www.sikarlia.com/api";
 
 export async function getDashboardInfo (yearInput, username) {
     const ro1 = {

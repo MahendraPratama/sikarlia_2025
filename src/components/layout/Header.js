@@ -269,16 +269,7 @@ const setting = [
     ></path>
   </svg>,
 ];
-async function handleChange(value) {
-  
-  await getPenandatangan(value, "Koordinator");
-  await getPenandatangan(value, "PPK");
-  await getPenandatangan(value, "PPBJ");
-  await getDashboardInfo(value, localStorage.getItem("user_session"));
-  localStorage.setItem("yearFilter", value);
-  window.location.reload();
 
-}
 
 function Header({
   placement,
@@ -288,6 +279,7 @@ function Header({
   handleSidenavColor,
   handleSidenavType,
   handleFixedNavbar,
+  togleLoading,
 }) {
   
   const { Title, Text } = Typography;
@@ -316,6 +308,18 @@ function Header({
     });
     
     return ret;
+  }
+
+  async function handleChange(value) {
+    togleLoading();
+    await getPenandatangan(value, "Koordinator");
+    await getPenandatangan(value, "PPK");
+    await getPenandatangan(value, "PPBJ");
+    await getDashboardInfo(value, localStorage.getItem("user_session"));
+    localStorage.setItem("yearFilter", value);
+    togleLoading();
+    window.location.reload();
+
   }
 
 
