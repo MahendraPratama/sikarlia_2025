@@ -164,7 +164,11 @@ class Home extends Component {
                         <Title level={3}>
                           {c.title} <small className={c.bnb} style={{color:"black"}}>{c.persent}</small>
                           &nbsp;
-                          <Button type="link" title="Lihat Detail" style={{padding:0}}><SelectOutlined/></Button>
+                          <Button type="link" title="Lihat Detail" style={{padding:0}}
+                            onClick={()=>{
+                              this.props.history.push('/kontrak');
+                            }}
+                          ><SelectOutlined/></Button>
                         </Title>
                       </Col>
                       <Col xs={6}>

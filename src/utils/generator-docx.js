@@ -89,11 +89,12 @@ export async function generateDocument (dataKontrak, namaFile, isPreview = false
     {judul: "Grand Total", nilai: commafy(dataKontrak.hrgtotal)},
   ];
 
+    //#### PAKE INI UNTUK DI DEPLOY KE SERVER
     //const path = window.location.origin + namaFile; //+ '/testTemplate.docx'
 
+    //#### PAKE INI UNTUK TESTING DI LOKAL
     const path = filedocx;
-    //console.log("path : "+path)
-  
+      
   if(dataKontrak.cb_managementFee){
     hps2.splice(1,0,{judul: "Management Fee", nilai: commafy(dataKontrak.managementFeeHPS)});
   }

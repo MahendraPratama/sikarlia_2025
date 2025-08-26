@@ -12,6 +12,7 @@
 import { Switch, Route, Redirect } from "react-router-dom";
 import Home from "./pages/Home";
 import Kontrak from "./pages/Kontrak";
+import BuatKontrak from "./pages/BuatKontrak";
 import Billing from "./pages/Billing";
 import Rtl from "./pages/Rtl";
 import Profile from "./pages/Profile";
@@ -32,6 +33,7 @@ function App() {
         <Main>
           <Route exact path="/dashboard" component={Home} />
           <Route exact path="/kontrak" component={Kontrak} />
+          <Route exact path="/buat_kontrak" component={BuatKontrak} />
           <Route exact path="/billing" component={Billing} />
           <Route exact path="/rtl" component={Rtl} />
           <Route exact path="/profile" component={Profile} />

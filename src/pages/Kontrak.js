@@ -198,7 +198,11 @@ class Kontrak extends Component {
         </Drawer>
         <Row gutter={[24, 0]}>
           <Col style={{padding:20}} xs="24" xl={24}>
-            <Button  size="small" type="primary" className="tag-primary" icon={<PlusCircleFilled />}>
+            <Button  size="small" type="primary" className="tag-primary" icon={<PlusCircleFilled />}
+              onClick={()=>{
+                this.props.history.push('/buat_kontrak');
+              }}
+            >
               Kontrak Baru
             </Button>
           </Col>
