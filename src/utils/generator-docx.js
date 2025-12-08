@@ -12,7 +12,8 @@ import InspectModule from 'docxtemplater/js/inspect-module';
 import { commafy } from './general-func';
 import { REACT_APP_URL_API } from './general-api';
 
-import filedocx from "../docx_template/kontrak50_200.docx";
+import template_lama from "../docx_template/kontrak50_200.docx";
+import template_BPSDM from "../docx_template/TEMPLATE_KONTRAK_BPSDM.docx";
 
 //import ImageModule from 'open-docxtemplater-image-module';
 //var ImageModule=require('docxtemplater-image-module');
@@ -79,6 +80,275 @@ const fixDocPrCorruptionModule = {
       });
   },
 };
+export async function generateDocument2025(dataKontrak, isPreview = false) {
+  //#### PAKE INI UNTUK DI DEPLOY KE SERVER
+  const path = window.location.origin + '/TEMPLATE_KONTRAK_BPSDM.docx'; //+ '/testTemplate.docx'
+
+  //#### PAKE INI UNTUK TESTING DI LOKAL
+  //const path = template_BPSDM;
+  loadFile(path, function(
+      error,
+      content
+    ) {
+      if (error) {
+        throw error;
+      }
+      //var ImageModule = require("open-docxtemplater-image-module");
+      var opts = {};
+      opts.centered = true;
+      opts.getImage = function (tagValue, tagName) {
+        const base64Regex = /^data:image\/(png|jpg|svg|svg\+xml);base64,/;
+        if (!base64Regex.test(tagValue)) {
+          return false;
+        }
+        const stringBase64 = tagValue.replace(base64Regex, "");
+        let binaryString;
+        if (typeof window !== "undefined") {
+          binaryString = window.atob(stringBase64);
+        } else {
+          binaryString = Buffer.from(stringBase64, "base64").toString(
+            "binary"
+          );
+        }
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          const ascii = binaryString.charCodeAt(i);
+          bytes[i] = ascii;
+        }
+        return bytes.buffer;
+      };
+      opts.getSize = function (img, tagValue, tagName) {
+        var width = dataKontrak.HPSimgW;
+        var height = dataKontrak.HPSimgH;
+        const forceWidth = 620;
+        const ratio = forceWidth / width;
+        return [
+          forceWidth,
+          // calculate height taking into account aspect ratio
+          Math.round(height * ratio),
+        ];
+      };
+      
+
+      var imageModule = new ImageModule(opts);
+
+      const zip = new PizZip(content);
+      const doc = new Docxtemplater(zip, {
+        paragraphLoop: true,
+        linebreaks: true,
+        nullGetter: nullGetter,
+        //modules: [imageModule, fixDocPrCorruptionModule],
+      }).compile();
+      doc.setData(setupData(dataKontrak));
+      //console.log(hps2);
+      try {
+        // render the document (replace all occurences of {first_name} by John, {last_name} by Doe, ...)
+        doc.render();
+        //console.log(dataKontrak);
+      } catch (error) {
+        // The error thrown here contains additional information when logged with JSON.stringify (it contains a properties object containing all suberrors).
+        function replaceErrors(key, value) {
+          if (value instanceof Error) {
+            return Object.getOwnPropertyNames(value).reduce(function(
+              error,
+              key
+            ) {
+              error[key] = value[key];
+              return error;
+            },
+            {});
+          }
+          return value;
+        }
+
+        if (error.properties && error.properties.errors instanceof Array) {
+          const errorMessages = error.properties.errors
+            .map(function(error) {
+              return error.properties.explanation;
+            })
+            .join('\n');
+        }
+        throw error;
+      }
+      const out = doc.getZip().generate({
+        type: 'blob',
+        mimeType:
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      }); //Output the document using Data-URI
+      if(isPreview){
+        var reader = new FileReader();
+        const pvw = doc.getZip().generate({
+          type: "arraybuffer",
+          compression: "DEFLATE",
+          //mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        })
+        var blob = new Blob([pvw], {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        });
+        //saveAs(blob)
+        try{
+          reader.readAsDataURL(blob);
+          reader.onloadend = function() {
+            var base64data = reader.result;
+            fetch(REACT_APP_URL_API+'/rest/uploadFileViewer.php', {
+              method: 'POST',
+              body: JSON.stringify({ base64: base64data, userid: dataKontrak.userid})
+            }).then((response) => {
+              //console.log(response)
+              //var src = "https://view.officeapps.live.com/op/embed.aspx?src="+"https://sikarliaapi.000webhostapp.com/rest/asu.docx";//+"&embedded=true";
+              //var src = "https://docs.google.com/viewerng/viewer?url="+"https://sikarliaapi.000webhostapp.com/rest/asu.docx"+"&embedded=true";
+              var src = 'https://docs.google.com/viewer?url='+REACT_APP_URL_API+'/rest/previewDocx/'+dataKontrak.userid+'.docx&embedded=true';
+              try{
+                document.getElementById("viewer").src = src;
+
+              }catch(e){
+                
+              }
+              //return src;
+            })
+          };
+        }
+        catch(e){
+          console.log(e);
+        }
+        return;
+      }
+      saveAs(out, dataKontrak.nama_pekerjaan+'_output.docx');
+    });
+}
+
+function setupData(dataKontrak){
+  return {
+    no_kontrak: dataKontrak.no_kontrak,
+    nama_pekerjaan: dataKontrak.nama_pekerjaan,
+    nama_pekerjaan_upper: dataKontrak.nama_pekerjaan.toUpperCase(),
+    harga_hps: commafy(dataKontrak.harga_hps),
+    harga_hps_terbilang: angkaTerbilang(dataKontrak.harga_hps),
+    harga_penawaran: commafy(dataKontrak.harga_penawaran),
+    harga_penawaran_terbilang: angkaTerbilang(dataKontrak.harga_penawaran),
+    harga_penawaran_pmb: commafy(dataKontrak.harga_penawaran_pmb),
+    harga_penawaran_pmb_terbilang: angkaTerbilang(dataKontrak.harga_penawaran_pmb),
+    angka_pelaksanaan: dataKontrak.angka_pelaksanaan,
+    pelaksanaan_terbilang: angkaTerbilang(dataKontrak.angka_pelaksanaan),
+    
+    perusahaan_pemenang: dataKontrak.perusahaan_pemenang,
+    npwp: dataKontrak.npwp,
+    alamat_perusahaan: dataKontrak.alamat_perusahaan,
+    nm_dir_perusahaan_pemenang: dataKontrak.nm_dir_perusahaan_pemenang,
+    nik_dir: dataKontrak.nik_dir,
+    jbt_perusahaan_pemenang: dataKontrak.jbt_perusahaan_pemenang,
+    bank: dataKontrak.bank,
+    cabang: dataKontrak.cabang,
+    norek: dataKontrak.norek,
+    atas_nama_bank: dataKontrak.atas_nama_bank,
+    perusahaan_pembanding: "(diisi nama Perusahaan Pembanding)",
+
+    tgl_nodin_ppk: setupTanggal(dataKontrak.tgl_nodin_ppk, "tgl_lengkap"),
+    bln_nodin_ppk: dataKontrak.tgl_nodin_ppk.$M,
+
+    tgl_hps: setupTanggal(dataKontrak.tgl_hps, "tgl_lengkap"),
+    tgl_und_ppbj: setupTanggal(dataKontrak.tgl_und_ppbj, "tgl_lengkap"),
+    bln_und_ppbj: dataKontrak.tgl_und_ppbj.$M,
+
+    tgl_dok_pnw: setupTanggal(dataKontrak.tgl_dok_pnw, "tgl_lengkap"),
+    hari_dok_pnw: setupTanggal(dataKontrak.tgl_dok_pnw, "hari"),
+
+    tgl_bapp: setupTanggal(dataKontrak.tgl_bapp, "tgl_lengkap"),
+    hari_bapp: setupTanggal(dataKontrak.tgl_bapp, "hari"),
+    bln_bapp: dataKontrak.tgl_bapp.$M,
+    tgl_bapp_terbilang: setupTanggal(dataKontrak.tgl_bapp, "tgl_terbilang"),
+    bln_bapp_terbilang: setupTanggal(dataKontrak.tgl_bapp, "bulan_terbilang"),
+    thn_bapp_terbilang: setupTanggal(dataKontrak.tgl_bapp, "tahun_terbilang"),
+
+    tgl_baep: setupTanggal(dataKontrak.tgl_baep, "tgl_lengkap"),
+    bln_baep: dataKontrak.tgl_baep.$M,
+    hari_baep: setupTanggal(dataKontrak.tgl_baep, "hari"),
+    tgl_baep_terbilang: setupTanggal(dataKontrak.tgl_baep, "tgl_terbilang"),
+    bln_baep_terbilang: setupTanggal(dataKontrak.tgl_baep, "bulan_terbilang"),
+    thn_baep_terbilang: setupTanggal(dataKontrak.tgl_baep, "tahun_terbilang"),
+
+    tgl_bakh: setupTanggal(dataKontrak.tgl_bakh, "tgl_lengkap"),
+    bln_bakh: dataKontrak.tgl_bakh.$M,
+    hari_bakh: setupTanggal(dataKontrak.tgl_bakh, "hari"),
+    tgl_bakh_terbilang: setupTanggal(dataKontrak.tgl_bakh, "tgl_terbilang"),
+    bln_bakh_terbilang: setupTanggal(dataKontrak.tgl_bakh, "bulan_terbilang"),
+    thn_bakh_terbilang: setupTanggal(dataKontrak.tgl_bakh, "tahun_terbilang"),
+
+
+    tgl_bahp: setupTanggal(dataKontrak.tgl_bahp, "tgl_lengkap"),
+    bln_bahp: dataKontrak.tgl_bahp.$M,
+    hari_bahp: setupTanggal(dataKontrak.tgl_bahp, "hari"),
+    tgl_bahp_terbilang: setupTanggal(dataKontrak.tgl_bahp, "tgl_terbilang"),
+    bln_bahp_terbilang: setupTanggal(dataKontrak.tgl_bahp, "bulan_terbilang"),
+    thn_bahp_terbilang: setupTanggal(dataKontrak.tgl_bahp, "tahun_terbilang"),
+
+    tgl_pphp: setupTanggal(dataKontrak.tgl_pphp, "tgl_lengkap"),
+    bln_pphp: dataKontrak.tgl_pphp.$M,
+
+    tgl_nodin_ppbj: setupTanggal(dataKontrak.tgl_nodin_ppbj, "tgl_lengkap"),
+    bln_nodin_ppbj: dataKontrak.tgl_nodin_ppbj.$M,
+
+    tgl_sppbj: setupTanggal(dataKontrak.tgl_sppbj, "tgl_lengkap"),
+    bln_sppbj: dataKontrak.tgl_sppbj.$M,
+
+    hari_spk: setupTanggal(dataKontrak.tgl_spk, "hari"), 
+    tgl_spk: setupTanggal(dataKontrak.tgl_spk, "tgl_lengkap"),
+    bln_spk: dataKontrak.tgl_spk.$M,
+
+    tgl_bapb: setupTanggal(dataKontrak.tgl_bapb, "tgl_lengkap"),
+    bln_bapb: dataKontrak.tgl_bapb.$M,
+
+    tgl_bast: setupTanggal(dataKontrak.tgl_bast, "tgl_lengkap"),
+    bln_bast: dataKontrak.tgl_bast.$M,
+    hari_bast: setupTanggal(dataKontrak.tgl_bast, "hari"),
+    tgl_bast_terbilang: setupTanggal(dataKontrak.tgl_bast, "tgl_terbilang"),
+    bln_bast_terbilang: setupTanggal(dataKontrak.tgl_bast, "bulan_terbilang"),
+    thn_bast_terbilang: setupTanggal(dataKontrak.tgl_bast, "tahun_terbilang"),
+
+    tgl_bap: setupTanggal(dataKontrak.tgl_bap, "tgl_lengkap"),
+    bln_bap: dataKontrak.tgl_bap.$M,
+    hari_bap: setupTanggal(dataKontrak.tgl_bap, "hari"),
+    tgl_bap_terbilang: setupTanggal(dataKontrak.tgl_bap, "tgl_terbilang"),
+    bln_bap_terbilang: setupTanggal(dataKontrak.tgl_bap, "bulan_terbilang"),
+    thn_bap_terbilang: setupTanggal(dataKontrak.tgl_bap, "tahun_terbilang"),
+
+    tgl_persiapan: setupTanggal(dataKontrak.tgl_persiapan, "tgl_lengkap"),
+    ta: dataKontrak.tgl_spk.$y,
+  }
+}
+function setupTanggal(dateInput,type=null){
+  if(dateInput==null){
+    return null;
+  }
+  var arrbulan =["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  var arrhari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"]
+  //var dateString = dateInput.split("-");
+  var day = dateInput.$D;
+  var month = dateInput.$M;
+  var year = dateInput.$y;
+  var d = new Date(year,month,day);
+  var hari = arrhari[d.getDay()];
+  var output = [hari+",", day, arrbulan[month], year].join(" ");
+  if(type=="tgl_lengkap"){
+    return [day, arrbulan[month], year].join(" ");
+  }
+  if(type=="hari"){
+    return hari.toUpperCase();
+  }
+  if(type=="tgl_terbilang"){
+    return angkaTerbilang(day).toUpperCase();
+  }
+  if(type=="bulan_terbilang"){
+    return arrbulan[month].toUpperCase();
+  }
+  if(type=="tahun_terbilang"){
+    return angkaTerbilang(year).toUpperCase();
+  }
+  return output;
+}
+
+
 export async function generateDocument (dataKontrak, namaFile, isPreview = false) {
   var hps2 = [
     {judul: "Sub Total", nilai: commafy(dataKontrak.subtotalHPS)},
@@ -93,7 +363,7 @@ export async function generateDocument (dataKontrak, namaFile, isPreview = false
     //const path = window.location.origin + namaFile; //+ '/testTemplate.docx'
 
     //#### PAKE INI UNTUK TESTING DI LOKAL
-    const path = filedocx;
+    const path = template_lama;
       
   if(dataKontrak.cb_managementFee){
     hps2.splice(1,0,{judul: "Management Fee", nilai: commafy(dataKontrak.managementFeeHPS)});
@@ -224,7 +494,7 @@ export async function generateDocument (dataKontrak, namaFile, isPreview = false
         // return <DocViewer documents={{ uri: newurl }} />;
         var reader = new FileReader();
         const pvw = doc.getZip().generate({
-          type: "nodebuffer",
+          type: "arraybuffer",
           compression: "DEFLATE",
           //mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         })

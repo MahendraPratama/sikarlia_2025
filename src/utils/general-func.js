@@ -1,4 +1,5 @@
 import React from 'react';
+import dayjs from "dayjs";
 import { Spin, message, Popconfirm } from 'antd';
 import {
     getDashboardInfo,
@@ -7,6 +8,14 @@ import {
 } from "../utils/general-api";
 import { generateDocument } from './generator-docx';
 
+export const getDayDiff = (dateA, dateB) => {
+  if (!dateA || !dateB) return null;
+
+  const a = dayjs(dateA, "DD-MM-YYYY");
+  const b = dayjs(dateB, "DD-MM-YYYY");
+
+  return b.diff(a, "day");  // hasil integer (+/-)
+};
 export const fileMaster = {
   '50200PL-NonLS':'/kontrak50_200PL.docx',
   '50200NonPL-NonLS':'/kontrak50_200.docx',
