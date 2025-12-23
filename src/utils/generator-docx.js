@@ -214,7 +214,7 @@ export async function generateDocument2025(dataKontrak, isPreview = false) {
         }
         return;
       }
-      saveAs(out, dataKontrak.nama_pekerjaan+'_output.docx');
+      saveAs(out, dataKontrak.no_kontrak+"_"+dataKontrak.nama_pekerjaan+'_output.docx');
     });
 }
 
@@ -245,31 +245,31 @@ function setupData(dataKontrak){
     perusahaan_pembanding: "(diisi nama Perusahaan Pembanding)",
 
     tgl_nodin_ppk: setupTanggal(dataKontrak.tgl_nodin_ppk, "tgl_lengkap"),
-    bln_nodin_ppk: dataKontrak.tgl_nodin_ppk.$M,
+    bln_nodin_ppk: parseInt(dataKontrak.tgl_nodin_ppk.$M)+1,
 
     tgl_hps: setupTanggal(dataKontrak.tgl_hps, "tgl_lengkap"),
     tgl_und_ppbj: setupTanggal(dataKontrak.tgl_und_ppbj, "tgl_lengkap"),
-    bln_und_ppbj: dataKontrak.tgl_und_ppbj.$M,
+    bln_und_ppbj: parseInt(dataKontrak.tgl_und_ppbj.$M)+1,
 
     tgl_dok_pnw: setupTanggal(dataKontrak.tgl_dok_pnw, "tgl_lengkap"),
     hari_dok_pnw: setupTanggal(dataKontrak.tgl_dok_pnw, "hari"),
 
     tgl_bapp: setupTanggal(dataKontrak.tgl_bapp, "tgl_lengkap"),
     hari_bapp: setupTanggal(dataKontrak.tgl_bapp, "hari"),
-    bln_bapp: dataKontrak.tgl_bapp.$M,
+    bln_bapp: parseInt(dataKontrak.tgl_bapp.$M)+1,
     tgl_bapp_terbilang: setupTanggal(dataKontrak.tgl_bapp, "tgl_terbilang"),
     bln_bapp_terbilang: setupTanggal(dataKontrak.tgl_bapp, "bulan_terbilang"),
     thn_bapp_terbilang: setupTanggal(dataKontrak.tgl_bapp, "tahun_terbilang"),
 
     tgl_baep: setupTanggal(dataKontrak.tgl_baep, "tgl_lengkap"),
-    bln_baep: dataKontrak.tgl_baep.$M,
+    bln_baep: parseInt(dataKontrak.tgl_baep.$M)+1,
     hari_baep: setupTanggal(dataKontrak.tgl_baep, "hari"),
     tgl_baep_terbilang: setupTanggal(dataKontrak.tgl_baep, "tgl_terbilang"),
     bln_baep_terbilang: setupTanggal(dataKontrak.tgl_baep, "bulan_terbilang"),
     thn_baep_terbilang: setupTanggal(dataKontrak.tgl_baep, "tahun_terbilang"),
 
     tgl_bakh: setupTanggal(dataKontrak.tgl_bakh, "tgl_lengkap"),
-    bln_bakh: dataKontrak.tgl_bakh.$M,
+    bln_bakh: parseInt(dataKontrak.tgl_bakh.$M)+1,
     hari_bakh: setupTanggal(dataKontrak.tgl_bakh, "hari"),
     tgl_bakh_terbilang: setupTanggal(dataKontrak.tgl_bakh, "tgl_terbilang"),
     bln_bakh_terbilang: setupTanggal(dataKontrak.tgl_bakh, "bulan_terbilang"),
@@ -277,37 +277,41 @@ function setupData(dataKontrak){
 
 
     tgl_bahp: setupTanggal(dataKontrak.tgl_bahp, "tgl_lengkap"),
-    bln_bahp: dataKontrak.tgl_bahp.$M,
+    bln_bahp: parseInt(dataKontrak.tgl_bahp.$M)+1,
     hari_bahp: setupTanggal(dataKontrak.tgl_bahp, "hari"),
     tgl_bahp_terbilang: setupTanggal(dataKontrak.tgl_bahp, "tgl_terbilang"),
     bln_bahp_terbilang: setupTanggal(dataKontrak.tgl_bahp, "bulan_terbilang"),
     thn_bahp_terbilang: setupTanggal(dataKontrak.tgl_bahp, "tahun_terbilang"),
 
     tgl_pphp: setupTanggal(dataKontrak.tgl_pphp, "tgl_lengkap"),
-    bln_pphp: dataKontrak.tgl_pphp.$M,
+    bln_pphp: parseInt(dataKontrak.tgl_pphp.$M)+1,
 
     tgl_nodin_ppbj: setupTanggal(dataKontrak.tgl_nodin_ppbj, "tgl_lengkap"),
-    bln_nodin_ppbj: dataKontrak.tgl_nodin_ppbj.$M,
+    bln_nodin_ppbj: parseInt(dataKontrak.tgl_nodin_ppbj.$M)+1,
 
     tgl_sppbj: setupTanggal(dataKontrak.tgl_sppbj, "tgl_lengkap"),
-    bln_sppbj: dataKontrak.tgl_sppbj.$M,
+    bln_sppbj: parseInt(dataKontrak.tgl_sppbj.$M)+1,
 
     hari_spk: setupTanggal(dataKontrak.tgl_spk, "hari"), 
     tgl_spk: setupTanggal(dataKontrak.tgl_spk, "tgl_lengkap"),
-    bln_spk: dataKontrak.tgl_spk.$M,
+    bln_spk: parseInt(dataKontrak.tgl_spk.$M)+1,
 
     tgl_bapb: setupTanggal(dataKontrak.tgl_bapb, "tgl_lengkap"),
-    bln_bapb: dataKontrak.tgl_bapb.$M,
+    bln_bapb: parseInt(dataKontrak.tgl_bapb.$M)+1,
+    hari_bapb: setupTanggal(dataKontrak.tgl_bapb, "hari"),
+    tgl_bapb_terbilang: setupTanggal(dataKontrak.tgl_bapb, "tgl_terbilang"),
+    bln_bapb_terbilang: setupTanggal(dataKontrak.tgl_bapb, "bulan_terbilang"),
+    thn_bapb_terbilang: setupTanggal(dataKontrak.tgl_bapb, "tahun_terbilang"),
 
     tgl_bast: setupTanggal(dataKontrak.tgl_bast, "tgl_lengkap"),
-    bln_bast: dataKontrak.tgl_bast.$M,
+    bln_bast: parseInt(dataKontrak.tgl_bast.$M)+1,
     hari_bast: setupTanggal(dataKontrak.tgl_bast, "hari"),
     tgl_bast_terbilang: setupTanggal(dataKontrak.tgl_bast, "tgl_terbilang"),
     bln_bast_terbilang: setupTanggal(dataKontrak.tgl_bast, "bulan_terbilang"),
     thn_bast_terbilang: setupTanggal(dataKontrak.tgl_bast, "tahun_terbilang"),
 
     tgl_bap: setupTanggal(dataKontrak.tgl_bap, "tgl_lengkap"),
-    bln_bap: dataKontrak.tgl_bap.$M,
+    bln_bap: parseInt(dataKontrak.tgl_bap.$M)+1,
     hari_bap: setupTanggal(dataKontrak.tgl_bap, "hari"),
     tgl_bap_terbilang: setupTanggal(dataKontrak.tgl_bap, "tgl_terbilang"),
     bln_bap_terbilang: setupTanggal(dataKontrak.tgl_bap, "bulan_terbilang"),

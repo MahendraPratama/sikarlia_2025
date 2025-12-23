@@ -322,6 +322,37 @@ function Header({
 
   }
 
+  function popMenuUser() {
+    return(
+    <Card variant={"borderless"} className="criclebox card-info-2 h-full"
+      cover={
+        <div className="gradent h-full col-content">
+          <div className="card-content">
+          <Title level={5}>{localStorage.getItem("tanggal_lengkap")}</Title>
+          </div>
+        </div>
+      }
+      actions={[
+        <div
+          onClick={()=>{console.log("click edit profile")}}
+        >
+          <EditOutlined/><br/>Edit Profile
+        </div>,
+        <div
+          onClick={()=>{user_logout()}}
+        >
+          <LogoutOutlined key="logout" /><br/>Logout
+        </div>,
+      ]}
+    >
+      <Meta
+        avatar={<Avatar src="https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_25.png" />}
+        title={localStorage.getItem("user_name")}
+        description={localStorage.getItem("email")}
+      />
+    </Card>
+  );
+  }
 
   return (
     <>
@@ -337,9 +368,9 @@ function Header({
           </div>
         </Col>
         <Col span={24} md={18} className="header-control">
-          <Button type="link" title="Profile" onClick={showDrawer}>
-            {profile}
-          </Button>
+          {/* <Button type="link" title="Profile" onClick={showDrawer}>
+            {setting}
+          </Button> */}
           <Button
             type="link"
             className="sidebar-toggler"
@@ -357,34 +388,6 @@ function Header({
             open={visible}
           >
             <div layout="vertical">
-              <Card bordered={false} className="criclebox card-info-2 h-full"
-                cover={
-                  <div className="gradent h-full col-content">
-                    <div className="card-content">
-                    <Title level={5}>{localStorage.getItem("tanggal_lengkap")}</Title>
-                    </div>
-                  </div>
-                }
-                actions={[
-                  <div
-                    onClick={()=>{console.log("click edit profile")}}
-                  >
-                    <EditOutlined/><br/>Edit Profile
-                  </div>,
-                  <div
-                    onClick={()=>{user_logout()}}
-                  >
-                    <LogoutOutlined key="logout" /><br/>Logout
-                  </div>,
-                ]}
-              >
-                <Meta
-                  avatar={<Avatar src="https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_25.png" />}
-                  title={localStorage.getItem("user_name")}
-                  description={localStorage.getItem("email")}
-                />
-              </Card>
-              <br/><br/><br/>
               <div className="header-top">
                 <Title level={4}>
                   Configurator
@@ -483,14 +486,11 @@ function Header({
               </div>
             </div>
           </Drawer>
-          {/* <Dropdown overlay={dropdown_profile}>
-            <Button type="link">
-            {profile}
+          <Dropdown overlay={popMenuUser()} trigger={["click"]}>
+            <Button type="link" size="large">
+              <Avatar src="https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_25.png" />
             </Button>
-          </Dropdown> */}
-          {/* <Link to="/sign-in" className="btn-sign-in">
-            
-          </Link> */}
+          </Dropdown>
         </Col>
       </Row>
     </>

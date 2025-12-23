@@ -29,7 +29,8 @@ import {
   Space,
   Input,
   InputNumber,
-  Divider ,
+  Divider, 
+  Spin,
 } from "antd";
 
 import { PlusCircleFilled, UserDeleteOutlined, SearchOutlined, 
@@ -39,7 +40,7 @@ import { PlusCircleFilled, UserDeleteOutlined, SearchOutlined,
 import { Children, Component } from "react";
 import React from 'react';
 
-import { deleteDataKontrak, loadDataKontrak } from "../utils/general-api";
+import { deleteDataKontrak, getDataPerusahaan, modifyDataPerusahaan } from "../utils/general-api";
 import { iconKontrak } from "../utils/general-ico";
 import { commafy, convertTanggal, convertTipeKontrak, generateViewerKontrak, kontrakPreview, fileMaster, getDayDiff } from "../utils/general-func";
 import { generateDocument, generateDocument2025 } from "../utils/generator-docx";
@@ -51,6 +52,7 @@ const perusahaan = [
   "CV Kiat Mandiri",
 ];
 const { TextArea } = Input;
+const { Option } = Select;
 class BuatKontrak extends Component {
   formRef = React.createRef();
   // constructor(props){
@@ -72,11 +74,94 @@ class BuatKontrak extends Component {
 
   state = {
     currentStep: 0,
-
+    loading: false,
+    options: [],
+    dataSelectAda: false,
+    isEdit:false,
   };
-  componentDidMount(){
-   
+  async componentDidMount(){
+   //var DataPerusahaan = await getDataPerusahaan();
+   //this.setState({optionPerusahaan: DataPerusahaan});
   }
+
+  UbahDataPerusahaan = () => {
+    this.setState({ isEdit: true, dataSelectAda: false});
+  }
+  async saveData(userid, allValues){
+    await modifyDataPerusahaan(userid, allValues);
+  }
+  simpanPerubahan = () => {
+    this.setState({ isEdit: false, dataSelectAda: true});
+    var isAdd = this.state.options[0].id === undefined ? true : false;
+    //console.log("ini adalah tambah data Baru : "+isAdd);
+    const allValues = this.formRef.current.getFieldsValue(true);
+    const userid = localStorage.getItem("user_session");
+    this.saveData(userid,allValues);
+    
+    //console.log(allValues);
+  }
+
+  searchPerusahaan = async (q) => {
+    this.setState({ loading: true });
+
+    const data = await getDataPerusahaan();
+    
+    const result = data.filter(item => 
+      item.nama_perusahaan.toLowerCase().includes(q.toLowerCase())
+    );
+
+    console.log(result);
+
+    setTimeout(() => {
+      this.setState({
+        loading: false,
+        options: result.length > 0 
+          ? result
+          : [{ nama: "__NOT_FOUND__" }]
+      });
+    }, 800);
+  };
+  handleSelect = (value) => {
+    const { options } = this.state;
+
+    // Jika NOT FOUND → ganti jadi manual input
+    if (value === "__NOT_FOUND__") {
+      this.setState({ isEdit: true, dataSelectAda: false });
+      this.formRef.current.setFieldsValue({
+        jbt_perusahaan_pemenang: "",
+        perusahaan_pemenang:"",
+        npwp: "",
+        alamat_perusahaan: "",
+        nm_dir_perusahaan_pemenang: "",
+        nik_dir: "",
+        bank: "", cabang: "KC", norek: "", 
+        atas_nama_bank: "", id_perusahaan_pemenang:""
+      });
+      
+      return;
+    }
+
+    // Jika ditemukan data → AUTO FILL
+    const selected = options.find(item => item.id === value);
+
+    if (selected) {
+      this.formRef.current.setFieldsValue({
+        perusahaan_pemenang: selected.nama_perusahaan,
+        npwp: selected.npwp,
+        alamat_perusahaan: selected.alamat_perusahaan,
+        nm_dir_perusahaan_pemenang: selected.nama_direktur,
+        nik_dir: selected.nik_direktur,
+        jbt_perusahaan_pemenang: selected.jabatan,
+        norek: selected.nomor_rekening,
+        atas_nama_bank: selected.nama_rekening,
+        bank: selected.bank,
+        cabang: selected.cabang,
+        id_perusahaan_pemenang: selected.id
+      });
+    }
+
+    this.setState({ isEdit: false, dataSelectAda: true });
+  };
 
   getPreviousBusinessDay = (date, intrvl=1) => {
     let d = date.subtract(intrvl, "day");
@@ -93,24 +178,9 @@ class BuatKontrak extends Component {
     if (!date) return;
 
     // Ambil H-1 dan mundurkan sampai hari kerja
-    const tglSPPBJ = this.getPreviousBusinessDay(date,4);
-    const tglDokPnw = this.getPreviousBusinessDay(tglSPPBJ,2);
-    const tglUndPPBJ = this.getPreviousBusinessDay(tglDokPnw,2);
-    const tglHPS = this.getPreviousBusinessDay(tglUndPPBJ);
     const tglPersiapan = this.getPreviousBusinessDay(date,1);
     this.formRef.current.setFieldsValue({
       tgl_persiapan: tglPersiapan,
-      tgl_sppbj: tglSPPBJ,
-      tgl_nodin_ppbj: tglSPPBJ,
-      tgl_pphp: tglSPPBJ,
-      tgl_bahp: tglSPPBJ,
-      tgl_bakh: tglSPPBJ,
-      tgl_baep: tglSPPBJ,
-      tgl_bapp: tglSPPBJ,
-      tgl_dok_pnw: tglDokPnw,
-      tgl_und_ppbj: tglUndPPBJ,
-      tgl_hps: tglHPS,
-      tgl_nodin_ppk: tglHPS
     });
   }; 
   handleBAPBChange = (date) =>{
@@ -125,7 +195,18 @@ class BuatKontrak extends Component {
       date.format("DD-MM-YYYY")
     );
     this.formRef.current.setFieldsValue({
-      angka_pelaksanaan: selisih
+      angka_pelaksanaan: (selisih + 1)
+    });
+  }
+  handleBAPPChange = (date) => {
+    if (!date) return;
+    this.formRef.current.setFieldsValue({
+      tgl_sppbj: date,
+      tgl_nodin_ppbj: date,
+      tgl_pphp: date,
+      tgl_bahp: date,
+      tgl_bakh: date,
+      tgl_baep: date
     });
   }
   next = async () => {
@@ -143,10 +224,10 @@ class BuatKontrak extends Component {
   onFinish = async () => {
     try{
       const values = await this.formRef.current.validateFields();
-      console.log(values);
+      //console.log(values);
       const allValues = this.formRef.current.getFieldsValue(true);
-      console.log("DATA FORM:", allValues);
-      console.log(allValues.tgl_baep.$D);
+      //console.log("DATA FORM:", allValues);
+      //console.log(allValues.tgl_baep.$D);
       generateDocument2025(allValues,false);
       //console.log(this.formRef);
     }catch{
@@ -157,7 +238,7 @@ class BuatKontrak extends Component {
   
   render (){
     const onChange = (e) => console.log(`radio checked:${e.target.value}`);
-    const { currentStep, toggleDrawer, descPreviewKontrak } = this.state;
+    const { currentStep, options, isEdit, loading, dataSelectAda } = this.state;
     const { Title } = Typography;
     const { Search } = Input;
     
@@ -238,150 +319,150 @@ class BuatKontrak extends Component {
           >
             <Row gutter={16}>
               <Col span={12}>
-              <Form.Item
-                label="Tanggal Nodin PPK"
-                name="tgl_nodin_ppk"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
-              </Form.Item>
+                <Form.Item
+                  label="Tanggal Nodin PPK"
+                  name="tgl_nodin_ppk"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item
-                label="Tanggal HPS"
-                name="tgl_hps"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
-              </Form.Item>
+                <Form.Item
+                  label="Tanggal HPS"
+                  name="tgl_hps"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item
-                label="Tanggal Undangan PPBJ"
-                name="tgl_und_ppbj"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
-              </Form.Item>
+                <Form.Item
+                  label="Tanggal Undangan PPBJ"
+                  name="tgl_und_ppbj"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item
-                label="Tanggal Dokumen Penawaran"
-                name="tgl_dok_pnw"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
-              </Form.Item>
+                <Form.Item
+                  label="Tanggal Dokumen Penawaran"
+                  name="tgl_dok_pnw"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item
-                label="Tanggal BAPP"
-                name="tgl_bapp"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
-              </Form.Item>
+                <Form.Item
+                  label="Tanggal BAPP"
+                  name="tgl_bapp"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker onChange={this.handleBAPPChange}
+                  format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item
-                label="Tanggal BAEP"
-                name="tgl_baep"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
-              </Form.Item>
+                <Form.Item
+                  label="Tanggal BAEP"
+                  name="tgl_baep"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item
-                label="Tanggal BAKH"
-                name="tgl_bakh"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
-              </Form.Item>
+                <Form.Item
+                  label="Tanggal BAKH"
+                  name="tgl_bakh"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item
-                label="Tanggal BAHP"
-                name="tgl_bahp"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
-              </Form.Item>
+                <Form.Item
+                  label="Tanggal BAHP"
+                  name="tgl_bahp"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item
-                label="Tanggal PPHP"
-                name="tgl_pphp"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
-              </Form.Item>
+                <Form.Item
+                  label="Tanggal PPHP"
+                  name="tgl_pphp"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item
-                label="Tanggal Nodin PPBJ"
-                name="tgl_nodin_ppbj"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
-              </Form.Item>
+                <Form.Item
+                  label="Tanggal Nodin PPBJ"
+                  name="tgl_nodin_ppbj"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item
-                label="Tanggal SPPBJ"
-                name="tgl_sppbj"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
-              </Form.Item>
+                <Form.Item
+                  label="Tanggal SPPBJ"
+                  name="tgl_sppbj"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
               </Col>
-              <Col span={12} hidden={true}>
+              <Col span={12}>
                 <Form.Item
                   label="Tanggal Persiapan"
                   name="tgl_persiapan"
                 >
-                  <DatePicker format="DD-MM-YYYY"/>
+                  <DatePicker format="DD-MM-YYYY" style={{width:"60%"}}/>
                 </Form.Item>
               </Col>
-              <Col span={12}></Col>
-              <Col span={12} style={{backgroundColor:"aliceblue", border:'groove'}}>
-              <Form.Item
-                label="Tanggal SPK"
-                name="tgl_spk"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker onChange={this.handleSPKChange}
-                format="DD-MMMM-YYYY"/>
-              </Form.Item>
-              </Col>
-              <Col span={12} style={{backgroundColor:"aliceblue", border:'groove'}}>
-              <Form.Item
-                label="Tanggal BAPB"
-                name="tgl_bapb"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker onChange={this.handleBAPBChange}
-                format="DD-MMMM-YYYY"/>
-              </Form.Item>
+              <Col span={12}>
+                <Form.Item
+                  label="Tanggal SPK"
+                  name="tgl_spk"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker onChange={this.handleSPKChange}
+                  format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item
-                label="Tanggal BAST"
-                name="tgl_bast"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
-              </Form.Item>
+                <Form.Item
+                  label="Tanggal BAPB"
+                  name="tgl_bapb"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker onChange={this.handleBAPBChange}
+                  format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
               </Col>
               <Col span={12}>
-              <Form.Item
-                label="Tanggal BAP"
-                name="tgl_bap"
-                rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
-              >
-                <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
-              </Form.Item>
+                <Form.Item
+                  label="Tanggal BAST"
+                  name="tgl_bast"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Tanggal BAP"
+                  name="tgl_bap"
+                  rules={[{ required: true, message: 'Masukkan tanggal pekerjaan!' }]}
+                >
+                  <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
+                </Form.Item>
               </Col>
               <Col span={12} hidden={true}>
                 <Form.Item
@@ -404,32 +485,67 @@ class BuatKontrak extends Component {
             title={"Input Data Perusahaan"}
           >
             <Row gutter={20}>
+              <Col span={24}>
+                <Select 
+                  showSearch
+                  style={{
+                    width: "100%",
+                  }}
+                  placeholder="Ketik untuk mencari nama Perusahaan Pemenang"
+                  filterOption={false}
+                  notFoundContent={loading ? <Spin size="small" /> : "Tidak ada data"}
+                  onSearch={this.searchPerusahaan}
+                  onSelect={this.handleSelect}
+
+                >
+                  {options.map(item =>
+                    item.nama === "__NOT_FOUND__" ? (
+                      <Option key="manual" value="__NOT_FOUND__">
+                        ➕ Tidak ditemukan, input manual
+                      </Option>
+                    ) : (
+                      <Option key={item.id} value={item.id}>
+                        {item.nama_perusahaan}
+                      </Option>
+                    )
+                  )}
+                </Select>
+              </Col>
+            </Row>
+            <Divider plain/>
+            <Row gutter={20}>
               <>
                 <Col span={12}>
                   <Divider orientation="left" plain>
                     Perusahaan
                   </Divider>
                   <>
+                  <Form.Item hidden
+                    label="ID Perusahaan Pemenang"
+                    name="id_perusahaan_pemenang"
+                  >
+                    <Input disabled={!isEdit}/>
+                  </Form.Item>
                   <Form.Item
                     label="Nama Perusahaan Pemenang"
                     name="perusahaan_pemenang"
                     rules={[{ required: true, message: 'Masukkan nama perusahaan!' }]}
                   >
-                    <Input />
+                    <Input disabled={!isEdit}/>
                   </Form.Item>
                   <Form.Item
                     label="NPWP Perusahaan"
                     name="npwp"
                     rules={[{ required: true, message: 'Masukkan NPWP perusahaan!' }]}
                   >
-                    <Input />
+                    <Input disabled={!isEdit}/>
                   </Form.Item>
                   <Form.Item
                     label="Alamat Perusahaan"
                     name="alamat_perusahaan"
                     rules={[{ required: true, message: 'Masukkan Alamat perusahaan!' }]}
                   >
-                    <TextArea rows={4} />
+                    <TextArea rows={4} disabled={!isEdit}/>
                   </Form.Item>
                   </>
 
@@ -441,21 +557,21 @@ class BuatKontrak extends Component {
                     name="nm_dir_perusahaan_pemenang"
                     rules={[{ required: true, message: 'Masukkan nama direktur!' }]}
                   >
-                    <Input />
+                    <Input disabled={!isEdit}/>
                   </Form.Item>
                   <Form.Item
                     label="NIK Direktur"
                     name="nik_dir"
                     rules={[{ required: true, message: 'Masukkan NIK direktur!' }]}
                   >
-                    <Input />
+                    <Input disabled={!isEdit}/>
                   </Form.Item>
                   <Form.Item
                     label="Jabatan"
                     name="jbt_perusahaan_pemenang"
                     rules={[{ required: true, message: 'Masukkan jabatan penandatangan perusahaan!' }]}
                   >
-                    <Input />
+                    <Input disabled={!isEdit}/>
                   </Form.Item>
                 </Col>
                 {/* BATAS TENGAH */}
@@ -469,30 +585,40 @@ class BuatKontrak extends Component {
                     name="norek"
                     rules={[{ required: true, message: 'Masukkan nomor rekening perusahaan!' }]}
                   >
-                    <Input />
+                    <Input disabled={!isEdit}/>
                   </Form.Item>
                   <Form.Item
                     label="Nama Rekening Perusahaan"
                     name="atas_nama_bank"
                     rules={[{ required: true, message: 'Masukkan nama rekening perusahaan!' }]}
                   >
-                    <Input />
+                    <Input disabled={!isEdit}/>
                   </Form.Item>
                   <Form.Item
                     label="Nama Bank"
                     name="bank"
                     rules={[{ required: true, message: 'Masukkan nama bank!' }]}
                   >
-                    <Input />
+                    <Input disabled={!isEdit}/>
                   </Form.Item>
                   <Form.Item
                     label="Cabang Bank"
                     name="cabang"
                     rules={[{ required: true, message: 'Masukkan nama cabang bank perusahaan!' }]}
                   >
-                    <Input />
+                    <Input disabled={!isEdit}/>
                   </Form.Item>
                   </>
+                  <Button 
+                    onClick={this.UbahDataPerusahaan}
+                    color="primary" hidden={!dataSelectAda} variant="solid">
+                    Ubah Data
+                  </Button>
+                  <Button 
+                    onClick={this.simpanPerubahan}
+                    color="primary" hidden={dataSelectAda} variant="solid">
+                    Simpan Data
+                  </Button>
                 </Col>
               </>
             </Row>
@@ -522,14 +648,14 @@ class BuatKontrak extends Component {
                 harga_hps: 0,
                 harga_penawaran: 0,
                 harga_penawaran_pmb: 0,
-                jbt_perusahaan_pemenang: "Direktur",
-                perusahaan_pemenang:"PT ABADI",
-                npwp: "000",
-                alamat_perusahaan: "Jalan ABD\nJakarta Pusat",
-                nm_dir_perusahaan_pemenang: "Ali Akbar",
-                nik_dir: "1113828199010002",
-                bank: "Mandiri", cabang: "Kb Jeruk", norek: "127-128371-9992", 
-                atas_nama_bank: "PT ABADI"
+                jbt_perusahaan_pemenang: "",
+                perusahaan_pemenang:"",
+                npwp: "",
+                alamat_perusahaan: "",
+                nm_dir_perusahaan_pemenang: "",
+                nik_dir: "",
+                bank: "", cabang: "KC", norek: "", 
+                atas_nama_bank: ""
               }}
             >     
               {steps[currentStep].content}

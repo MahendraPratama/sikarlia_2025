@@ -3,6 +3,32 @@ import { Button, message, Popconfirm } from 'antd';
 
 export const REACT_APP_URL_API="https://www.sikarlia.com/api";
 
+export async function getDataPerusahaan() {
+  const requestOptions = {
+      method: 'POST',
+      //headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ namaPerusahaan:"" })
+    };
+
+    var ret = await fetch(REACT_APP_URL_API+'/rest/lookupDataPerusahaan.php', requestOptions)
+        .then(response => response.json())
+        .then(respon => {
+          var dataAPI = respon;
+          
+          if(dataAPI.response_code != 200){
+            
+          }else{
+            //this.setState({ data: dataAPI.data, dataRender:dataAPI.data, dataToEdit: dataAPI.data });
+            //this.handlePageChange(1);
+            dataAPI.data.forEach(element => {
+              element["key"] = element.id;
+            });
+            return dataAPI.data;
+          }
+        });
+    return await ret;
+}
+
 export async function getDashboardInfo (yearInput, username) {
     const ro1 = {
         method: 'POST',
@@ -91,4 +117,42 @@ export async function deleteDataKontrak (unique_id) {
     });
 
     return await true;
+}
+
+export async function modifyDataPerusahaan(userid, dataPerusahaan){
+    const requestOptions = {
+      method: 'POST',
+      //headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userid: userid, 
+        nama_perusahaan: dataPerusahaan.perusahaan_pemenang,
+        alamat_perusahaan: dataPerusahaan.alamat_perusahaan,
+        npwp: dataPerusahaan.npwp,
+        nama_direktur: dataPerusahaan.nm_dir_perusahaan_pemenang,
+        nik_direktur: dataPerusahaan.nik_dir,
+        jabatan: dataPerusahaan.jbt_perusahaan_pemenang,
+        bank: dataPerusahaan.bank,
+        cabang: dataPerusahaan.cabang,
+        nama_rekening: dataPerusahaan.atas_nama_bank,
+        nomor_rekening: dataPerusahaan.norek,
+        id: dataPerusahaan.id_perusahaan_pemenang,
+      })
+    };
+
+    var ret = await fetch(REACT_APP_URL_API+'/rest/insertDataPerusahaanBaru.php', requestOptions)
+        .then(response => response.json())
+        .then(respon => {
+          var dataAPI = respon;
+          
+          if(dataAPI.response_code != 200){
+            
+          }else{
+            //this.setState({ data: dataAPI.data, dataRender:dataAPI.data, dataToEdit: dataAPI.data });
+            //this.handlePageChange(1);
+            // dataAPI.data.forEach(element => {
+            //   element["key"] = element.unique_id;
+            // });
+            return dataAPI.data;
+          }
+        });
+    return await ret;
 }
