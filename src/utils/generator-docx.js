@@ -82,10 +82,11 @@ const fixDocPrCorruptionModule = {
 };
 export async function generateDocument2025(dataKontrak, isPreview = false) {
   //#### PAKE INI UNTUK DI DEPLOY KE SERVER
-  const path = window.location.origin + '/TEMPLATE_KONTRAK_BPSDM.docx'; //+ '/testTemplate.docx'
+  //const path = window.location.origin + '/TEMPLATE_KONTRAK_BPSDM.docx'; //+ '/testTemplate.docx'
 
   //#### PAKE INI UNTUK TESTING DI LOKAL
-  //const path = template_BPSDM;
+  const path = template_BPSDM;
+
   loadFile(path, function(
       error,
       content
@@ -178,6 +179,7 @@ export async function generateDocument2025(dataKontrak, isPreview = false) {
       }); //Output the document using Data-URI
       if(isPreview){
         var reader = new FileReader();
+        var urlIframe = "";
         const pvw = doc.getZip().generate({
           type: "arraybuffer",
           compression: "DEFLATE",
@@ -193,12 +195,13 @@ export async function generateDocument2025(dataKontrak, isPreview = false) {
             var base64data = reader.result;
             fetch(REACT_APP_URL_API+'/rest/uploadFileViewer.php', {
               method: 'POST',
-              body: JSON.stringify({ base64: base64data, userid: dataKontrak.userid})
+              body: JSON.stringify({ base64: base64data, userid: dataKontrak.id_users})
             }).then((response) => {
               //console.log(response)
               //var src = "https://view.officeapps.live.com/op/embed.aspx?src="+"https://sikarliaapi.000webhostapp.com/rest/asu.docx";//+"&embedded=true";
               //var src = "https://docs.google.com/viewerng/viewer?url="+"https://sikarliaapi.000webhostapp.com/rest/asu.docx"+"&embedded=true";
-              var src = 'https://docs.google.com/viewer?url='+REACT_APP_URL_API+'/rest/previewDocx/'+dataKontrak.userid+'.docx&embedded=true';
+              var src = 'https://docs.google.com/viewer?url='+REACT_APP_URL_API+'/rest/previewDocx/'+dataKontrak.id_users+'.docx&embedded=true';
+              urlIframe = src;
               try{
                 document.getElementById("viewer").src = src;
 
@@ -212,7 +215,7 @@ export async function generateDocument2025(dataKontrak, isPreview = false) {
         catch(e){
           console.log(e);
         }
-        return;
+        return urlIframe;
       }
       saveAs(out, dataKontrak.no_kontrak+"_"+dataKontrak.nama_pekerjaan+'_output.docx');
     });
@@ -321,7 +324,7 @@ function setupData(dataKontrak){
     ta: dataKontrak.tgl_spk.$y,
   }
 }
-function setupTanggal(dateInput,type=null){
+export function setupTanggal(dateInput,type=null){
   if(dateInput==null){
     return null;
   }
@@ -485,17 +488,6 @@ export async function generateDocument (dataKontrak, namaFile, isPreview = false
       }); //Output the document using Data-URI
       if(isPreview){
         
-        //var newurl = window.URL.createObjectURL(out);
-        //console.log("blob link: "+ newurl.substring(4,newurl.length+1));
-        //console.log(doc.getZip);
-        //var trim = newurl.substring(4,newurl.length+1);
-        
-        // setTimeout(()=>{
-        //   document.getElementById("viewer").src = src;
-        // },200)
-        
-        //document.getElementById("viewer").src = src;
-        // return <DocViewer documents={{ uri: newurl }} />;
         var reader = new FileReader();
         const pvw = doc.getZip().generate({
           type: "arraybuffer",
@@ -529,7 +521,7 @@ export async function generateDocument (dataKontrak, namaFile, isPreview = false
           };
         }
         catch(e){
-          console.log(e);
+          //console.log(e);
         }
         return;
       }

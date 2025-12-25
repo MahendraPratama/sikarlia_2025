@@ -31,19 +31,28 @@ import {
   InputNumber,
   Divider, 
   Spin,
+  notification,
+  Descriptions,
 } from "antd";
 
 import { PlusCircleFilled, UserDeleteOutlined, SearchOutlined, 
   EyeFilled, EditFilled, DeleteFilled, CloseOutlined,
   CloudDownloadOutlined, EditOutlined,
+  ToolFilled,
+  DownloadOutlined,
+  FileAddOutlined,
+  DatabaseOutlined,
 } from "@ant-design/icons";
 import { Children, Component } from "react";
 import React from 'react';
+import dayjs from "dayjs";
 
-import { deleteDataKontrak, getDataPerusahaan, modifyDataPerusahaan } from "../utils/general-api";
+import { deleteDataKontrak, getDataPerusahaan, getDetailKontrakBaru, modifyDataKontrak, modifyDataPerusahaan } from "../utils/general-api";
 import { iconKontrak } from "../utils/general-ico";
-import { commafy, convertTanggal, convertTipeKontrak, generateViewerKontrak, kontrakPreview, fileMaster, getDayDiff } from "../utils/general-func";
-import { generateDocument, generateDocument2025 } from "../utils/generator-docx";
+import { commafy, convertTanggal, convertTipeKontrak, getPreviousBusinessDay, kontrakPreview, fileMaster, getDayDiff, renderLoading } from "../utils/general-func";
+import { generateDocument, generateDocument2025, setupTanggal } from "../utils/generator-docx";
+import angkaTerbilang from '@develoka/angka-terbilang-js';
+
 const perusahaan = [
   "PT Maju Jaya",
   "PT Sumber Rezeki",
@@ -55,50 +64,162 @@ const { TextArea } = Input;
 const { Option } = Select;
 class BuatKontrak extends Component {
   formRef = React.createRef();
-  // constructor(props){
-  //   super(props)
-  //   this.state={
-  //     userid:null,
-  //     data:[],
-  //     dataRender:[],
-  //     dataToEdit:[],
-  //     search:"",
-  //     toggleDrawer: false,
-  //     descPreviewKontrak:[],
-  //     loadingDownload: false,
-  //     currentStep:0,
-  //   }
-
-  //   //this.formRef = null;
-  // }
 
   state = {
     currentStep: 0,
     loading: false,
+    loadingDownload:false,
+    stateLoading: false,
     options: [],
-    dataSelectAda: false,
-    isEdit:false,
+    dataSelectAda: false, //togle status Pilihan perusahaan ada atau tidak, dan button simpan perubahan is Hidden
+    isEdit:false, //togle Form Edit
+    allValues:[], //all values current form
   };
+  togleLoading(){
+    let curr = this.state.stateLoading;
+    this.setState({stateLoading: !curr});
+  }
   async componentDidMount(){
-   //var DataPerusahaan = await getDataPerusahaan();
-   //this.setState({optionPerusahaan: DataPerusahaan});
+    const { id } = this.props.match.params;
+
+    if(id){
+      this.togleLoading();
+      try {
+        var data = await getDetailKontrakBaru(id);
+        this.formRef.current.setFieldsValue({
+          // =====================
+          // DATA KONTRAK
+          // =====================
+          id:data.id,
+          nama_pekerjaan: data.nama_pekerjaan,
+          no_kontrak: data.nomor_kontrak,
+          angka_pelaksanaan: Number(data.angka_pelaksanaan),
+
+          harga_hps: data.nilai_hps,
+          harga_penawaran: data.nilai_spk,
+          harga_penawaran_pmb: data.nilai_pembanding,
+
+          // =====================
+          // PERUSAHAAN
+          // =====================
+          id_perusahaan_pemenang: data.id_perusahaan_pemenang,
+          perusahaan_pemenang: data.nama_perusahaan,
+          alamat_perusahaan: data.alamat_perusahaan,
+          npwp: data.npwp,
+
+          nm_dir_perusahaan_pemenang: data.nama_direktur,
+          nik_dir: data.nik_direktur,
+          jbt_perusahaan_pemenang: data.jabatan,
+
+          bank: data.bank,
+          cabang: data.cabang,
+          atas_nama_bank: data.nama_rekening,
+          norek: data.nomor_rekening,
+
+          // =====================
+          // TANGGAL (DatePicker)
+          // =====================
+          tgl_nodin_ppk: data.tanggal_nodin_ppk
+            ? dayjs(data.tanggal_nodin_ppk)
+            : null,
+
+          tgl_hps: data.tanggal_hps
+            ? dayjs(data.tanggal_hps)
+            : null,
+
+          tgl_und_ppbj: data.tanggal_undangan_ppbj
+            ? dayjs(data.tanggal_undangan_ppbj)
+            : null,
+
+          tgl_dok_pnw: data.tanggal_dokumen_penawaran
+            ? dayjs(data.tanggal_dokumen_penawaran)
+            : null,
+
+          tgl_bapp: data.tanggal_bapp
+            ? dayjs(data.tanggal_bapp)
+            : null,
+
+          tgl_baep: data.tanggal_baep
+            ? dayjs(data.tanggal_baep)
+            : null,
+
+          tgl_bakh: data.tanggal_bakh
+            ? dayjs(data.tanggal_bakh)
+            : null,
+
+          tgl_bahp: data.tanggal_bahp
+            ? dayjs(data.tanggal_bahp)
+            : null,
+
+          tgl_pphp: data.tanggal_pphp
+            ? dayjs(data.tanggal_pphp)
+            : null,
+
+          tgl_nodin_ppbj: data.tanggal_nodin_ppbj
+            ? dayjs(data.tanggal_nodin_ppbj)
+            : null,
+
+          tgl_sppbj: data.tanggal_sppbj
+            ? dayjs(data.tanggal_sppbj)
+            : null,
+
+          tgl_persiapan: data.tanggal_persiapan
+            ? dayjs(data.tanggal_persiapan)
+            : null,
+
+          tgl_spk: data.tanggal_spk
+            ? dayjs(data.tanggal_spk)
+            : null,
+
+          tgl_bapb: data.tanggal_bapb
+            ? dayjs(data.tanggal_bapb)
+            : null,
+
+          tgl_bast: data.tanggal_bast
+            ? dayjs(data.tanggal_bast)
+            : null,
+
+          tgl_bap: data.tanggal_bap
+            ? dayjs(data.tanggal_bap)
+            : null
+        });
+      }catch (error) {
+        console.error("Gagal ambil detail kontrak:", error);
+      } finally {
+        // ⬅️ INI PALING PENTING
+        this.togleLoading();
+        this.setState({dataSelectAda:true});
+      }
+    }
+    
   }
 
   UbahDataPerusahaan = () => {
     this.setState({ isEdit: true, dataSelectAda: false});
   }
-  async saveData(userid, allValues){
-    await modifyDataPerusahaan(userid, allValues);
-  }
-  simpanPerubahan = () => {
+  
+  simpanPerubahan = async () => {
     this.setState({ isEdit: false, dataSelectAda: true});
-    var isAdd = this.state.options[0].id === undefined ? true : false;
-    //console.log("ini adalah tambah data Baru : "+isAdd);
-    const allValues = this.formRef.current.getFieldsValue(true);
-    const userid = localStorage.getItem("user_session");
-    this.saveData(userid,allValues);
-    
-    //console.log(allValues);
+    try {
+      const allValues = this.formRef.current.getFieldsValue(true);
+      const userid = localStorage.getItem("user_session");
+      const dataRet = await modifyDataPerusahaan(userid,allValues);
+      
+      this.formRef.current.setFieldsValue({
+        id_perusahaan_pemenang:dataRet.id_perusahaan
+      });
+    }
+    catch {
+
+    }
+    finally {
+      notification.success({
+        message: 'Berhasil',
+        description: 'Perubahan data berhasil disimpan',
+        placement: 'topRight',
+        duration: 4,
+      });
+    }
   }
 
   searchPerusahaan = async (q) => {
@@ -135,7 +256,7 @@ class BuatKontrak extends Component {
         nm_dir_perusahaan_pemenang: "",
         nik_dir: "",
         bank: "", cabang: "KC", norek: "", 
-        atas_nama_bank: "", id_perusahaan_pemenang:""
+        atas_nama_bank: "", id_perusahaan_pemenang:null
       });
       
       return;
@@ -163,22 +284,13 @@ class BuatKontrak extends Component {
     this.setState({ isEdit: false, dataSelectAda: true });
   };
 
-  getPreviousBusinessDay = (date, intrvl=1) => {
-    let d = date.subtract(intrvl, "day");
-
-    // 0 = Minggu, 6 = Sabtu
-    while (d.day() === 0 || d.day() === 6) {
-      d = d.subtract(1, "day");
-    }
-
-    return d;
-  };
+  
 
   handleSPKChange = (date) => {
     if (!date) return;
 
     // Ambil H-1 dan mundurkan sampai hari kerja
-    const tglPersiapan = this.getPreviousBusinessDay(date,1);
+    const tglPersiapan = getPreviousBusinessDay(date,1);
     this.formRef.current.setFieldsValue({
       tgl_persiapan: tglPersiapan,
     });
@@ -222,27 +334,51 @@ class BuatKontrak extends Component {
     this.setState({ currentStep: this.state.currentStep - 1 });
   };
   onFinish = async () => {
+    var allValues;
     try{
-      const values = await this.formRef.current.validateFields();
-      //console.log(values);
-      const allValues = this.formRef.current.getFieldsValue(true);
-      //console.log("DATA FORM:", allValues);
-      //console.log(allValues.tgl_baep.$D);
-      generateDocument2025(allValues,false);
-      //console.log(this.formRef);
+      this.togleLoading();
+      await this.formRef.current.validateFields();
+      allValues = this.formRef.current.getFieldsValue(true);
+      await modifyDataKontrak(localStorage.getItem("user_session"), allValues);
+      allValues.harga_penawaran_comma = commafy(allValues.harga_penawaran);
+      allValues.tgl_spk_setup = setupTanggal(allValues.tgl_spk, "tgl_lengkap");
+      allValues.tgl_bapb_setup = setupTanggal(allValues.tgl_bapb, "tgl_lengkap");
+      allValues.year = (parseInt(allValues.tgl_spk.$M)+1)+"/"+allValues.tgl_spk.$y;
+      //this.props.history.goBack();
     }catch{
       console.log("Ada field yang belum valid.");
+    }finally{
+      this.togleLoading();
+      this.setState({ 
+        currentStep: this.state.currentStep + 1,
+        allValues:allValues,
+       });
+      console.log(allValues);
     }
     
   };
+
+  async downloadKontrak(){
+    this.setState({loadingDownload: true});
+    setTimeout(() => {
+      this.setState({loadingDownload: false});
+    }, 2000);
+    try{
+      await generateDocument2025(this.state.allValues);
+    }catch{
+
+    }finally{
+    }
+  }
   
   render (){
     const onChange = (e) => console.log(`radio checked:${e.target.value}`);
-    const { currentStep, options, isEdit, loading, dataSelectAda } = this.state;
+    const { currentStep, options, isEdit, loading, dataSelectAda, stateLoading, allValues } = this.state;
     const { Title } = Typography;
     const { Search } = Input;
     
     const steps = [
+      //Data Pekerjaan
       {
         title: 'Data Pekerjaan',
         content: (
@@ -251,6 +387,12 @@ class BuatKontrak extends Component {
             className="site-card-border-less-wrapper"
             title={"Input Data Pekerjaan"}
           >
+              <Form.Item hidden
+                label="ID Kontrak"
+                name="id"
+              >
+                <InputNumber disabled={true} min={1}/>
+              </Form.Item>
               <Form.Item
                 label="Nama Pekerjaan"
                 name="nama_pekerjaan"
@@ -309,6 +451,7 @@ class BuatKontrak extends Component {
           ,
           
       },
+      //Jadwal Pekerjaan
       {
         title: 'Jadwal Pekerjaan',
         content: (
@@ -423,7 +566,7 @@ class BuatKontrak extends Component {
                   label="Tanggal Persiapan"
                   name="tgl_persiapan"
                 >
-                  <DatePicker format="DD-MM-YYYY" style={{width:"60%"}}/>
+                  <DatePicker format="DD-MMMM-YYYY" style={{width:"60%"}}/>
                 </Form.Item>
               </Col>
               <Col span={12}>
@@ -476,6 +619,7 @@ class BuatKontrak extends Component {
           </Card>)
           ,
       },
+      //Perusahaan Pemenang
       {
         title: 'Perusahaan Pemenang',
         content: (
@@ -520,11 +664,12 @@ class BuatKontrak extends Component {
                     Perusahaan
                   </Divider>
                   <>
-                  <Form.Item hidden
+                  <Form.Item //hidden
                     label="ID Perusahaan Pemenang"
                     name="id_perusahaan_pemenang"
+                    rules={[{ required: true, message: 'Simpan dulu data perusahaannya!' }]}
                   >
-                    <Input disabled={!isEdit}/>
+                    <InputNumber disabled={true} min={1}/>
                   </Form.Item>
                   <Form.Item
                     label="Nama Perusahaan Pemenang"
@@ -626,12 +771,80 @@ class BuatKontrak extends Component {
           </Card>
         ),
       },
+      //Ringkasan Kontrak
+      {
+        title: 'Ringkasan Kontrak',
+        content: (
+          <Card
+            variant={"borderless"}
+            className="site-card-border-less-wrapper"
+            title={"Ringkasan Kontrak"}
+          >
+              <Descriptions bordered>
+                <Descriptions.Item label="Nomor Kontrak">{allValues.no_kontrak+"/SPK/BPSDM.4.PPK/KU.01.11/"+allValues.year}</Descriptions.Item>
+                <Descriptions.Item label="Tanggal Kontak" span={2}>{allValues.tgl_spk_setup}</Descriptions.Item>
+                <Descriptions.Item label="Nama Kontraktor/Perusahaan" span={3}>
+                  {/* <Badge status="processing" text="Running" /> */}
+                  {allValues.perusahaan_pemenang}
+                </Descriptions.Item>
+                <Descriptions.Item label="Alamat Perusahaan" span={3}>
+                  {allValues.alamat_perusahaan}
+                </Descriptions.Item>
+                <Descriptions.Item label="Nilai SPK/Kontrak" span={3}>
+                  {"Rp. " +allValues.harga_penawaran_comma + " (" 
+                  + angkaTerbilang(allValues.harga_penawaran)
+                  + " rupiah)"
+                  }
+                </Descriptions.Item>
+                <Descriptions.Item label="Uraian Pekerjaan" span={3}>
+                  {allValues.nama_pekerjaan}
+                </Descriptions.Item>
+                <Descriptions.Item label="Jangka Waktu Pelaksanaan" span={3}>
+                  {allValues.angka_pelaksanaan+" ("+angkaTerbilang(allValues.angka_pelaksanaan)+") "
+                  + "hari kalender, " + allValues.tgl_spk_setup + " s/d " + allValues.tgl_bapb_setup
+                  }
+                </Descriptions.Item>
+                <Descriptions.Item span={3}>
+                  <Space>
+                    <Button shape="round" 
+                      loading={this.state.loadingDownload}
+                      icon={<CloudDownloadOutlined/>}
+                      onClick={()=>{this.downloadKontrak()}}
+                      style={{backgroundColor:"#40c702", color:"white"}}
+                      >
+                      Download
+                    </Button>
+                    <Button type="primary" shape="round" 
+                      icon={<FileAddOutlined />}
+                      onClick={()=>{
+                        this.props.history.push('/buat_kontrak');
+                      }}
+                      >
+                      Input Lagi
+                    </Button>
+                    <Button shape="round"
+                      onClick={()=>[
+                        this.props.history.goBack()
+                      ]}
+                    >
+                      <DatabaseOutlined />Data Kontrak
+                    </Button>
+                    
+                  </Space>
+                </Descriptions.Item>
+              </Descriptions>
+              
+
+          </Card>)
+          ,
+      }
     ];
     const items = steps.map((item) => ({ key: item.title, title: item.title }));
 
 
     return (
       <>
+        {renderLoading(stateLoading)}
         <Row gutter={[24,0]}>
           <Steps size="small" current={currentStep} labelPlacement="vertical" 
           items={items} style={{paddingLeft:"10%", paddingRight:"10%"}}/>
@@ -664,13 +877,17 @@ class BuatKontrak extends Component {
               <br/><br/><br/>
               <Col>
                 {currentStep===0?
-                  <Button color="danger" variant="solid">Batal</Button> : 
-                  <Button variant="solid" onClick={this.prev}>Sebelumnya</Button>
+                  <Button color="danger" onClick={()=>{this.props.history.goBack()}} variant="solid">Batal</Button> : 
+                  <Button variant="solid" hidden={currentStep===3?true:false} 
+                    onClick={this.prev}
+                  >Sebelumnya</Button>
                 }
                 &nbsp;
-                {currentStep===steps.length - 1?
+                {currentStep===steps.length - 2?
                   <Button color="cyan" onClick={this.onFinish} variant="solid">Simpan</Button> :
-                  <Button color="primary" variant="solid" onClick={this.next}>Selanjutnya</Button>
+                  <Button color="primary" hidden={currentStep===3?true:false} 
+                    variant="solid" onClick={this.next}
+                  >Selanjutnya</Button>
                 }
               </Col>
               </Row>

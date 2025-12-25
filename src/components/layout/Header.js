@@ -11,7 +11,7 @@
 */
 
 import { useState, useEffect } from "react";
-
+import { withRouter } from "react-router-dom";
 import {
   Row,
   Col,
@@ -334,7 +334,7 @@ function Header({
       }
       actions={[
         <div
-          onClick={()=>{console.log("click edit profile")}}
+          onClick={()=>{window.location.href = "/profile"}}
         >
           <EditOutlined/><br/>Edit Profile
         </div>,
@@ -346,7 +346,7 @@ function Header({
       ]}
     >
       <Meta
-        avatar={<Avatar src="https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_25.png" />}
+        avatar={<Avatar src={localStorage.getItem("avatar")} />}
         title={localStorage.getItem("user_name")}
         description={localStorage.getItem("email")}
       />
@@ -488,7 +488,7 @@ function Header({
           </Drawer>
           <Dropdown overlay={popMenuUser()} trigger={["click"]}>
             <Button type="link" size="large">
-              <Avatar src="https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_25.png" />
+              <Avatar src={localStorage.getItem("avatar")} />
             </Button>
           </Dropdown>
         </Col>

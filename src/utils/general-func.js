@@ -6,7 +6,7 @@ import {
     getPenandatangan,
     REACT_APP_URL_API,
 } from "../utils/general-api";
-import { generateDocument } from './generator-docx';
+import { generateDocument, generateDocument2025 } from './generator-docx';
 
 export const getDayDiff = (dateA, dateB) => {
   if (!dateA || !dateB) return null;
@@ -33,13 +33,14 @@ export const fileMaster = {
 }
 
 export async function setSession (dataSession) {
-
+    localStorage.setItem("data_session",JSON.stringify(dataSession));
     localStorage.setItem("user_session", dataSession.userid);
     localStorage.setItem("user_name", dataSession.name);
     localStorage.setItem("user_type", dataSession.user_type);
     localStorage.setItem("id", dataSession.id);
     localStorage.setItem("password", dataSession.password);
     localStorage.setItem("email", dataSession.email);
+    localStorage.setItem("avatar", dataSession.avatar);
     var newDate = new Date();
     var yearNow = newDate.getFullYear();
     localStorage.setItem("yearFilter", yearNow);
@@ -56,15 +57,48 @@ export async function setSession (dataSession) {
     localStorage.setItem('years', JSON.stringify(years));
     localStorage.setItem('tanggal_lengkap', getTanggalProfile(newDate));
     localStorage.setItem('isLoading', false);
+    localStorage.setItem("yearFilter", yearNow);
     await getPenandatangan(yearNow, "Koordinator");
     await getPenandatangan(yearNow, "PPK");
     await getPenandatangan(yearNow, "PPBJ");
     await getDashboardInfo(yearNow, dataSession.userid);
 }
 
+export function updateLocalSession(dataSession, passwordBaru = "") {
+  // ambil password lama dari localStorage
+  const oldPassword = localStorage.getItem("password");
+
+  localStorage.setItem("data_session", JSON.stringify(dataSession));
+  localStorage.setItem("user_session", dataSession.userid);
+  localStorage.setItem("user_name", dataSession.name);
+  localStorage.setItem("user_type", dataSession.user_type);
+  localStorage.setItem("id", dataSession.id);
+  localStorage.setItem("email", dataSession.email);
+  localStorage.setItem("avatar", dataSession.avatar);
+
+  // password hanya diupdate jika ada perubahan
+  if (passwordBaru && passwordBaru.trim() !== "") {
+    localStorage.setItem("password", passwordBaru);
+  } else if (!oldPassword) {
+    // fallback (opsional)
+    localStorage.removeItem("password");
+  }
+}
+
 const getLocStor = (variable) => {
 
 }
+
+export const getPreviousBusinessDay = (date, intrvl=1) => {
+    let d = date.subtract(intrvl, "day");
+
+    // 0 = Minggu, 6 = Sabtu
+    while (d.day() === 0 || d.day() === 6) {
+      d = d.subtract(1, "day");
+    }
+
+    return d;
+  };
 
 const getTanggalProfile = (date) =>{
     const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
@@ -124,12 +158,17 @@ export const renderLoading = (boolean) => {
     return <Spin tip="Loading" spinning={boolean} size="large" fullscreen></Spin>;
 }
 
-export const kontrakPreview = (dataSelected) => {
-    var itemToDesc = ["namaPekerjaan", "namaPerusahaan", "npwpPerusahaan", "hrgtotal", "nmr", "penandatangananKontrak", "LSorNon"];
+export const kontrakPreview = (dataSelected, type = "Old") => {
+  var objRet = [];  
+  
+  if(type==="Old"){
+    const tglSistem = dataSelected["penandatangananKontrak"];
+    dataSelected["penandatangananKontrak_c"] = convertTanggal(tglSistem);
+    var itemToDesc = ["namaPekerjaan", "namaPerusahaan", "npwpPerusahaan", "hrgtotal", "nmr", "penandatangananKontrak_c", "LSorNon"];
     var descLabel = ["Nama Pekerjaan", "Perusahaan Pemenang", "NPWP", "Nilai Kontrak", "Nomor Kontrak", "Tanggal SPK", "Jenis Pengajuan"];
     
     var ctr = 0;
-    var objRet = [];
+    
     descLabel.forEach(x=> {
       var item = {
         key: ctr,
@@ -140,7 +179,29 @@ export const kontrakPreview = (dataSelected) => {
       objRet.push(item);
       ctr++;
     });
-    return objRet;
+  }
+  else{
+    const tglSistem = dataSelected["tanggal_spk"];
+    dataSelected["tanggal_spk_c"] = convertTanggal(tglSistem);
+    var itemToDesc = ["nama_pekerjaan", "nama_perusahaan", "npwp", "nilai_spk", "nomor_kontrak", "tanggal_spk_c", "updated_at"];
+    var descLabel = ["Nama Pekerjaan", "Perusahaan Pemenang", "NPWP", "Nilai Kontrak", "Nomor Kontrak", "Tanggal SPK", "Terakhir Edit"];
+    
+    var ctr = 0;
+    
+    descLabel.forEach(x=> {
+      var item = {
+        key: ctr,
+        label: x,
+        children: x==="Nilai Kontrak"?"Rp. "+commafy(dataSelected[itemToDesc[ctr]]):dataSelected[itemToDesc[ctr]],
+        span: ctr===0?3:2,
+      }
+      objRet.push(item);
+      ctr++;
+    });
+  }
+
+  return objRet;
+    
 }
 
 export const setupTgl = (data) =>{
@@ -234,6 +295,46 @@ export async function generateViewerKontrak (dataSelected) {
     return objRet;
 }
 
+export async function generateViewerKontrak2025 (dataSelected) {
+  var objRet = {};
+  //yg sebelah kiri nama atribut untuk generate docx dari Form, yg sebelah kanan nama atribut dari database
+  dataSelected.no_kontrak = dataSelected.nomor_kontrak;
+  dataSelected.harga_hps = dataSelected.nilai_hps;
+  dataSelected.harga_penawaran = dataSelected.nilai_spk;
+  dataSelected.harga_penawaran_pmb = dataSelected.nilai_pembanding;
+
+  dataSelected.nm_dir_perusahaan_pemenang = dataSelected.nama_direktur;
+  dataSelected.nik_dir = dataSelected.nik_direktur;
+  dataSelected.jbt_perusahaan_pemenang = dataSelected.jabatan;
+  dataSelected.norek = dataSelected.nomor_rekening;
+  dataSelected.atas_nama_bank = dataSelected.nama_rekening;
+
+  dataSelected.tgl_nodin_ppk = parseDateObject(dataSelected.tanggal_nodin_ppk);
+  dataSelected.tgl_hps = parseDateObject(dataSelected.tanggal_hps);
+  dataSelected.tgl_und_ppbj = parseDateObject(dataSelected.tanggal_undangan_ppbj);
+  dataSelected.tgl_dok_pnw = parseDateObject(dataSelected.tanggal_dokumen_penawaran);
+  dataSelected.tgl_bapp = parseDateObject(dataSelected.tanggal_bapp);
+  dataSelected.tgl_baep = parseDateObject(dataSelected.tanggal_baep);
+  dataSelected.tgl_bakh = parseDateObject(dataSelected.tanggal_bakh);
+  dataSelected.tgl_bahp = parseDateObject(dataSelected.tanggal_bahp);
+  dataSelected.tgl_pphp = parseDateObject(dataSelected.tanggal_pphp);
+  dataSelected.tgl_nodin_ppbj = parseDateObject(dataSelected.tanggal_nodin_ppbj);
+  dataSelected.tgl_sppbj = parseDateObject(dataSelected.tanggal_sppbj);
+  dataSelected.tgl_spk = parseDateObject(dataSelected.tanggal_spk);
+  dataSelected.tgl_bapb = parseDateObject(dataSelected.tanggal_bapb);
+  dataSelected.tgl_bast = parseDateObject(dataSelected.tanggal_bast);
+  dataSelected.tgl_bap = parseDateObject(dataSelected.tanggal_bap);
+  dataSelected.tgl_persiapan = parseDateObject(dataSelected.tanggal_persiapan);
+  //console.log(dataSelected);
+
+  objRet["dataProcessed"] = dataSelected;
+
+  await generateDocument2025(dataSelected, true);
+  var urlIFrame = 'https://docs.google.com/viewer?url='+REACT_APP_URL_API+'/rest/previewDocx/'+localStorage.user_session+'.docx&embedded=true'
+  objRet["urlIFrame"] = urlIFrame;
+  return objRet;
+}
+
 function hitungTotal(dataKontrak, dataTabel){
     var subtot = 0;
     //console.log(tableHPS);
@@ -286,4 +387,16 @@ function hitungTotal(dataKontrak, dataTabel){
   }
 function removeComma(num){
   return num.replace(/,/g, '');
+}
+
+export function parseDateObject(dateString) {
+  if (!dateString) return null;
+
+  const [year, month, day] = dateString.split('-');
+
+  return {
+    $D: day,                 // "03"
+    $M: Number(month) - 1,   // 11 (zero-based)
+    $y: Number(year)         // 2025
+  };
 }

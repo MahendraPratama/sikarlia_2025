@@ -33,6 +33,7 @@ function App() {
         <Main>
           <Route exact path="/dashboard" component={Home} />
           <Route exact path="/kontrak" component={Kontrak} />
+          <Route exact path="/buat_kontrak/:id" component={BuatKontrak} />
           <Route exact path="/buat_kontrak" component={BuatKontrak} />
           <Route exact path="/billing" component={Billing} />
           <Route exact path="/rtl" component={Rtl} />

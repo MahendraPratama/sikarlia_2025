@@ -29,6 +29,7 @@ import {
   Input,
   Popconfirm,
   Space,
+  notification,
 } from "antd";
 
 import { PlusCircleFilled, UserDeleteOutlined, SearchOutlined, 
@@ -39,8 +40,8 @@ import { Children, Component } from "react";
 
 import { deleteDataKontrak, loadDataKontrak } from "../utils/general-api";
 import { iconKontrak } from "../utils/general-ico";
-import { commafy, convertTanggal, convertTipeKontrak, generateViewerKontrak, kontrakPreview, fileMaster } from "../utils/general-func";
-import { generateDocument } from "../utils/generator-docx";
+import { commafy, convertTanggal, convertTipeKontrak, generateViewerKontrak, kontrakPreview, fileMaster, generateViewerKontrak2025, renderLoading } from "../utils/general-func";
+import { generateDocument, generateDocument2025 } from "../utils/generator-docx";
 
 class Kontrak extends Component {
   constructor(props){
@@ -54,37 +55,85 @@ class Kontrak extends Component {
       toggleDrawer: false,
       descPreviewKontrak:[],
       loadingDownload: false,
+      dInmPkj:"namaPekerjaan",
+      dInmrKt:"nmr",
+      dInmPrsh:"namaPerusahaan",
+      dInilai:"hrgtotal",
+      dItglSpk:"penandatangananKontrak",
+      dIuniqueId:"unique_id",
+      yearFilter:0,
+      stateLoading: false,
+      id_kontrak:null,
     }
   }
   componentDidMount(){
     this.loadData();
   }
+  togleLoading(){
+    let curr = this.state.stateLoading;
+    this.setState({stateLoading: !curr});
+  }
   async loadData(){
+    this.togleLoading();
     const usertype = localStorage.getItem("user_type");
     const userid = localStorage.getItem("user_session");
     const {search} = this.state;
     const yearFilter = localStorage.getItem("yearFilter");
 
+    const yearNumber = parseInt(yearFilter);
+    if (yearNumber < 2025) {
+      this.setState({
+        dInmPkj:"namaPekerjaan",
+        dInmPrsh:"namaPerusahaan",
+        dInilai:"hrgtotal",
+        dItglSpk:"penandatangananKontrak",
+        dIuniqueId:"unique_id",
+        dInmrKt:"nmr"
+      });
+    }else{
+      this.setState({
+        dInmPkj:"nama_pekerjaan",
+        dInmPrsh:"nama_perusahaan",
+        dInilai:"nilai_spk",
+        dItglSpk:"tanggal_spk",
+        dIuniqueId:"id",
+        dInmrKt:"nomor_kontrak"
+      });
+    }
+
     var dataRet = await loadDataKontrak(userid, usertype, search, yearFilter);
     //this.drawData(dataRet);
-    this.setState({dataToEdit : dataRet, dataRender: dataRet});
-    //console.log(dataRet);
+    this.setState({dataToEdit : dataRet, dataRender: dataRet, yearFilter: yearNumber});
+    this.togleLoading();
   }
   
   render (){
     const onChange = (e) => console.log(`radio checked:${e.target.value}`);
-    const { dataRender, toggleDrawer, descPreviewKontrak } = this.state;
+    const { dataRender, toggleDrawer, descPreviewKontrak, dInmrKt,
+      dInmPkj, dInmPrsh, dInilai, dItglSpk, dIuniqueId, stateLoading,
+     } = this.state;
     const { Title } = Typography;
     const { Search } = Input;
     
     const columns = [
+      // {
+      //   title: "",
+      //   dataIndex: dInmrKt,
+      //   key: dInmrKt,
+      //   render: (text, record) =>
+      //       <>
+      //         <p>{text}</p>
+      //       </>
+      // },
       {
         title: "Nama Pekerjaan",
-        dataIndex: "namaPekerjaan",
-        key: "namaPekerjaan",
+        dataIndex: dInmPkj,
+        key: dInmPkj,
         render: (text, record)=> 
           <>
+            <p style={{paddingLeft:"2%", color:"#1677ff", fontSize:11}}>{record[dInmrKt]}</p>
             <Avatar.Group>
+              
               <Avatar
                 className="shape-avatar"
                 shape="square"
@@ -93,7 +142,7 @@ class Kontrak extends Component {
               ></Avatar>
               <div className="avatar-info">
                 <Title level={5}>{text.substring(0,70)+(text.length>70 ? "..." : "")}</Title>
-                <p style={{fontSize:12}}>Kontrak {convertTipeKontrak(record.tipeKontrak).name}</p>
+                <p style={{fontSize:12}}>Kontrak Barang & Jasa Lainnya | 50-200</p>
               </div>
             </Avatar.Group>
           </>
@@ -101,21 +150,21 @@ class Kontrak extends Component {
       },
       {
         title: "Pemenang",
-        dataIndex: "namaPerusahaan",
-        key: "namaPerusahaan",
+        dataIndex: dInmPrsh,
+        key: dInmPrsh,
         render: (text, record) =>
             <>
               <div className="author-info">
                 <Title level={5}>{text}</Title>
-                <p style={{fontSize:12}}>Rp. {commafy(record.hrgtotal)}</p>
+                <p style={{fontSize:12}}>Rp. {commafy(record[dInilai])}</p>
               </div>
             </>
       },
     
       {
         title: "Tanggal SPK",
-        key: "penandatangananKontrak",
-        dataIndex: "penandatangananKontrak",
+        key: dItglSpk,
+        dataIndex: dItglSpk,
         render: text=>
           <>
           <p style={{fontSize:12}}>{convertTanggal(text)}</p>
@@ -123,15 +172,17 @@ class Kontrak extends Component {
       },
       {
         title: "Action",
-        key: "unique_id",
-        dataIndex: "unique_id",
+        key: dIuniqueId,
+        dataIndex: dIuniqueId,
         render: text=>
           <>
-            <Button title="Detail" color="cyan" variant="solid" shape="round" icon={<EyeFilled/>} size="small" 
+            <Button title="Detail" color="" variant="solid" shape="round" icon={<EyeFilled/>} size="small" 
               onClick={()=>{this.showDrawer(text)}}
             />
             &nbsp;
-            <Button title="Ubah" color="primary" variant="solid" shape="round" icon={<EditFilled/>} size="small" />
+            <Button title="Ubah" color="primary" variant="solid" shape="round" icon={<EditFilled/>} size="small" 
+              onClick={()=>{this.editKontrak(text)}}
+            />
             &nbsp;
             <Popconfirm
               title="Hapus Data"
@@ -141,7 +192,7 @@ class Kontrak extends Component {
               okText="Ya"
               cancelText="Tidak"
             >
-              <Button title="Hapus" color="danger" variant="solid" shape="round" icon={<DeleteFilled/>} size="small"/> 
+              <Button title="Hapus" color="red" variant="solid" shape="round" icon={<DeleteFilled/>} size="small"/> 
             </Popconfirm>
           </>
       },
@@ -149,6 +200,7 @@ class Kontrak extends Component {
    
     return (
       <>
+      {renderLoading(stateLoading)}
         <Drawer
           title="Preview"
           placement="top"
@@ -181,15 +233,19 @@ class Kontrak extends Component {
               <Descriptions title="Info Kontrak" bordered items={descPreviewKontrak} size="small"/>
               <br/>
               <Space>
-                  <Button shape="round" 
-                    loading={this.state.loadingDownload}
-                    icon={<CloudDownloadOutlined/>}
-                    onClick={()=>{this.downloadKontrak()}}
-                    style={{backgroundColor:"#40c702", color:"white"}}
-                    >
-                    Download
-                  </Button>
-                  <Button shape="round">
+                <Button shape="round" 
+                  loading={this.state.loadingDownload}
+                  icon={<CloudDownloadOutlined/>}
+                  onClick={()=>{this.downloadKontrak()}}
+                  style={{backgroundColor:"#40c702", color:"white"}}
+                  >
+                  Download
+                </Button>
+                <Button shape="round"
+                  onClick={()=>[
+                    this.editKontrak(this.state.id_kontrak)
+                  ]}
+                >
                   <EditOutlined/>Edit
                 </Button>
               </Space>
@@ -236,8 +292,27 @@ class Kontrak extends Component {
 
   }
 
+  async editKontrak(id){
+    const { yearFilter } = this.state;
+    if (yearFilter >= 2025){
+      this.props.history.push(`/buat_kontrak/${id}`);  
+    }else{
+      notification.warning({
+        message: 'Edit Tidak Diizinkan',
+        description: 'Data kontrak dibawah tahun 2025 tidak dapat diedit. Silakan buat kontrak baru.',
+        placement: 'topRight',
+        duration: 4,
+      });
+    }
+  }
   async confirmDelete(unique_id){
-    await deleteDataKontrak(unique_id);
+    const { yearFilter } = this.state;
+    if (yearFilter < 2025){
+      await deleteDataKontrak(unique_id, "Old");
+    }
+    else{
+      await deleteDataKontrak(unique_id, "New");
+    }
     this.loadData();
   }
 
@@ -248,21 +323,45 @@ class Kontrak extends Component {
   }
 
   async showDrawer(unique_id){//Preiview Kontrak
-    this.setState({toggleDrawer: true});
+    this.setState({toggleDrawer: true, id_kontrak: unique_id});
     window.scrollTo(0,0);
-    var dataSelected = this.state.dataRender.find(x => x.unique_id === unique_id);
-    var objRet = kontrakPreview(dataSelected);
-    var dataRet = await generateViewerKontrak(dataSelected);
+
+    const { yearFilter } = this.state;
+    var objRet,dataRet;
+    if (yearFilter < 2025){
+      var dataSelected = this.state.dataRender.find(x => x.unique_id === unique_id);
+      objRet = kontrakPreview(dataSelected, "Old");
+      dataRet = await generateViewerKontrak(dataSelected);
+    }else{
+      var dataSelected = this.state.dataRender.find(x => x.id === unique_id);
+      dataRet = await generateViewerKontrak2025(dataSelected);
+      objRet = kontrakPreview(dataSelected, "New");
+    }
     this.setState({descPreviewKontrak: objRet, urlIFrame: dataRet.urlIframe, dataToGenerate: dataRet.dataProcessed});
   }
 
-  downloadKontrak(){
+  async downloadKontrak(){
+    const { yearFilter } = this.state;
+
     this.setState({loadingDownload: true});
     setTimeout(() => {
       this.setState({loadingDownload: false});
-    }, 3000);
+    }, 2000);
     var dt = this.state.dataToGenerate;
-    generateDocument(dt,fileMaster[dt.tipeKontrak.concat("-",dt.LSorNon)]);
+
+    try{
+      if (yearFilter < 2025){
+        await generateDocument(dt,fileMaster[dt.tipeKontrak.concat("-",dt.LSorNon)]);
+      }
+      else
+      {
+        await generateDocument2025(dt);
+      }
+    }catch{
+
+    }finally{
+      //this.setState({loadingDownload: false});
+    }
   }
 
   closeDrawer(){

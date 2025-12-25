@@ -24,6 +24,7 @@ import {
   Timeline,
   Radio,
   Avatar,
+  notification,
 } from "antd";
 import {
   ToTopOutlined,
@@ -38,10 +39,10 @@ import {
   SyncOutlined,
 } from "@ant-design/icons";
 
-import { commafy, convertTipeKontrak, convertTanggal, generateViewerKontrak, fileMaster } from "../utils/general-func";
+import { commafy, convertTipeKontrak, convertTanggal, generateViewerKontrak, fileMaster, generateViewerKontrak2025 } from "../utils/general-func";
 import IconSikarlia from "../assets/images/logo/ico.png";
 import { iconKontrak, iconPerusahaan, iconTanggalKontrak, iconNilaiKontrak } from "../utils/general-ico";
-import { generateDocument } from "../utils/generator-docx";
+import { generateDocument, generateDocument2025 } from "../utils/generator-docx";
 
 
 class Home extends Component {
@@ -49,7 +50,8 @@ class Home extends Component {
     super(props)
     this.state={
       //dtDash:false,
-      loadingDownload: false
+      loadingDownload: false,
+      yearFilter:localStorage.getItem("yearFilter"),
     }
   }
   async downloadRecentAct(){
@@ -60,9 +62,32 @@ class Home extends Component {
     var dtDash = JSON.parse(localStorage.getItem("dataDashboard"));
     var dtAkt = dtDash.dataAktivitas[0];
 
-    var dataRet = await generateViewerKontrak(dtAkt);
-    var dt = dataRet.dataProcessed;
-    generateDocument(dt,fileMaster[dt.tipeKontrak.concat("-",dt.LSorNon)]);
+    const {yearFilter} = this.state;
+    if(yearFilter < 2025){
+      var dataRet = await generateViewerKontrak(dtAkt);
+      var dt = dataRet.dataProcessed;
+      generateDocument(dt,fileMaster[dt.tipeKontrak.concat("-",dt.LSorNon)]);
+    }else{
+      var dt = await generateViewerKontrak2025(dtAkt);
+      await generateDocument2025(dt.dataProcessed);
+    }
+    
+  }
+  async editKontrak(){
+    var dtDash = JSON.parse(localStorage.getItem("dataDashboard"));
+    var dtAkt = dtDash.dataAktivitas[0];
+
+    const { yearFilter } = this.state;
+    if (yearFilter >= 2025){
+      this.props.history.push(`/buat_kontrak/${dtAkt.id}`);  
+    }else{
+      notification.warning({
+        message: 'Edit Tidak Diizinkan',
+        description: 'Data kontrak dibawah tahun 2025 tidak dapat diedit. Silakan buat kontrak baru.',
+        placement: 'topRight',
+        duration: 4,
+      });
+    }
   }
   render () {
     const { Title, Text } = Typography;
@@ -89,7 +114,7 @@ class Home extends Component {
     ];
     if(dtDash.dataAktivitas[0]!=undefined){
       var dtAkt = dtDash.dataAktivitas[0];
-      var tipeKontrak = convertTipeKontrak(dtAkt.tipeKontrak).name;
+      var tipeKontrak = "Dokumen Kontrak | Barang & Jasa Lainnya | 50-200";
       var judulKontrak = dtAkt.namaPekerjaan;
       var perusahaan = dtAkt.namaPerusahaan;
       var nilaiKontrak = commafy(dtAkt.hrgtotal);
@@ -114,34 +139,38 @@ class Home extends Component {
           <Row className="rowgap-vbox" gutter={[24, 0]}>
             <Col xs={24} sm={24} md={24} lg={24} xl={24} className="mb-24">
               <Card
-                bodyStyle={{ display: "none" }}
-                title={
-                  <Row justify="space-between" align="middle" gutter={[24, 0]}>
-                    <Col span={24} md={12} className="col-info">
-                      <Avatar.Group>
-                        <Avatar size={74} shape="square" src="https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_25.png" />
-                        <div className="avatar-info" style={{padding:10}}>
-                          <p>Selamat Datang</p>
-                          <h2 className="font-semibold m-0">
-                            {localStorage.getItem("user_name")}</h2>
-                          
-                        </div>
-                      </Avatar.Group>
-                    </Col>
-                    <Col
-                      span={24}
-                      md={12}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "flex-end",
+                variant={"outlined"}
+                
+              >
+                <Row justify="space-between" align="middle" gutter={[24, 0]}>
+                  <Col span={24} md={12} className="col-info">
+                    <Avatar.Group>
+                      <Avatar size={74} shape="square" src={localStorage.getItem("avatar")} />
+                      <div className="avatar-info" style={{padding:20}}>
+                        <p>Selamat Datang</p>
+                        <h2 className="font-semibold m-0">
+                          {localStorage.getItem("user_name")}</h2>
+                      </div>
+                    </Avatar.Group>
+                  </Col>
+                  <Col
+                    span={24}
+                    md={12}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <Button
+                      onClick={()=>{
+                        this.props.history.push('/profile');
                       }}
-                    >
-                      <Button><EditOutlined/> Edit Profile</Button>
-                    </Col>
-                  </Row>
-                }
-              ></Card>
+                    ><EditOutlined/> Edit Profile</Button>
+                  </Col>
+                </Row>
+
+              </Card>
             </Col>
           </Row>
           
@@ -197,7 +226,7 @@ class Home extends Component {
               >
                 <Row justify="space-between" align="middle" gutter={[24, 0]}>
                     <Col span={24} md={16} className="col-info">
-                      <p style={{color:"#0202c7", paddingLeft:10, fontSize:12}}>Dokumen Kontrak | {tipeKontrak}</p>
+                      <p style={{color:"#1677ff", paddingLeft:10, fontSize:12}}>Dokumen Kontrak | {tipeKontrak}</p>
                       <Avatar.Group>
                         <Avatar size={74} shape="square" src={iconKontrak} />
                         <div className="avatar-info" style={{paddingLeft:20}}>
@@ -236,7 +265,9 @@ class Home extends Component {
                           Download
                         </Button>
                         &nbsp;
-                        <Button shape="round">
+                        <Button shape="round"
+                          onClick={()=>{this.editKontrak()}}
+                        >
                           <EditOutlined/>Edit
                         </Button>
                       </Col>
